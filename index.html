@@ -12,7 +12,7 @@
             -webkit-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            background-color: #e2e8f0; /* Light theme background */
+            background-color: #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -21,16 +21,20 @@
         }
         .game-container {
             width: 100%;
-            max-width: 480px;
-            background-color: #ffffff; /* White background */
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 15px;
+            max-width: 420px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px
+ 20px rgba(0, 0, 0, 0.1);
+            padding: 12px;
             position: relative;
+        }
+        .main-view {
+             transition: opacity 0.3s ease;
         }
         .game-area {
             position: relative;
-            height: 280px;
+            height: 250px;
         }
         .lane-container {
             display: flex;
@@ -39,7 +43,7 @@
             top: 0;
             left: 0;
             right: 0;
-            bottom: 100px;
+            bottom: 80px;
             overflow: hidden;
         }
         .lane {
@@ -53,31 +57,28 @@
 
         .note {
             position: absolute;
-            top: -40px;
-            width: 50px;
-            height: 25px;
-            border-radius: 12.5px;
-            left: calc(50% - 25px);
+            top: -30px;
+            width: 40px;
+            height: 20px;
+            border-radius: 10px;
+            left: calc(50% - 20px);
             transition: transform linear;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .note.kick { background-color: #dc2626; }
         .note.snare { background-color: #4f46e5; }
         .note.hi-hat { background-color: #facc15; }
         .note.tom { background-color: #16a34a; }
-        .note.hit {
-            opacity: 0;
-            transition: opacity 0.1s ease-out;
-        }
+        .note.hit { opacity: 0; transition: opacity 0.1s ease-out; }
         
         #drum-pad-container {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 100px;
+            height: 80px;
             border-top: 4px solid #ffd200;
-            box-shadow: 0 -5px 15px rgba(255, 210, 0, 0.3);
+            box-shadow: 0 -5px 15px rgba(255, 210, 0, 0.2);
             display: flex;
             justify-content: space-around;
             align-items: center;
@@ -85,8 +86,8 @@
             background-color: #ffffff;
         }
         .drum-pad {
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -97,7 +98,7 @@
             color: white;
             font-weight: 700;
         }
-        .drum-pad .drum-name { font-size: 0.8rem; }
+        .drum-pad .drum-name { font-size: 0.7rem; }
         .drum-pad .key-hint { font-size: 0.6rem; opacity: 0.7; }
         
         .drum-pad.kick { background-color: #dc2626; }
@@ -105,107 +106,140 @@
         .drum-pad.hi-hat { background-color: #facc15; }
         .drum-pad.tom { background-color: #16a34a; }
 
-        .drum-pad.playing {
-            transform: scale(0.95);
-            filter: brightness(1.3);
-        }
+        .drum-pad.playing { transform: scale(0.95); filter: brightness(1.2); }
         .drum-pad.hit-correct { background-color: #22c55e !important; }
         .drum-pad.hit-miss { background-color: #ef4444 !important; }
 
         .pro-button {
             transition: all 0.2s ease-in-out; border-radius: 8px;
-            padding: 8px 16px; font-weight: 600; cursor: pointer;
+            padding: 8px 12px; font-weight: 600; cursor: pointer;
             background-color: #ffd200; color: #1e293b; border: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .pro-button:hover:not(:disabled) { background-color: #e6be00; }
         .pro-button:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        .gemini-input {
-            background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #1e293b;
-            border-radius: 8px;
-            padding: 8px;
-            width: 100%;
+        .control-btn {
+            padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+            color: #475569; background-color: #f1f5f9; font-weight: 500;
+            transition: all 0.2s ease; cursor: pointer; font-size: 0.75rem;
         }
-        
-        .speed-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid #cbd5e1;
-            color: #475569;
-            background-color: #f1f5f9;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            font-size: 0.75rem;
+        .control-btn.active { background-color: #ffd200; color: #1e293b; border-color: #ffd200; }
+        .control-btn:not(.active):hover { background-color: #e2e8f0; }
+
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
         }
-        .speed-btn.active {
-            background-color: #ffd200;
-            color: #1e293b;
-            border-color: #ffd200;
-        }
-        .speed-btn:not(.active):hover {
-            background-color: #e2e8f0;
-        }
+        .modal-overlay.visible { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <img src="https://github.com/max-vorozhko/rankova_studio_drum/blob/main/Rankova%20logo.png?raw=true" alt="Логотип" class="mx-auto mb-2 h-14">
-        <h1 class="text-xl font-bold text-slate-800 mb-1 text-center">Драм Тренажер: Падаючі Ноти</h1>
-        
-        <div class="flex justify-between items-center bg-slate-100 rounded-lg p-2 mb-2">
-            <div class="text-left">
-                <p class="text-xs font-medium text-slate-500">РАХУНОК</p>
-                <p id="score" class="text-xl font-bold" style="color: #eab308;">0</p>
+        <!-- Game View -->
+        <div id="game-view" class="main-view">
+            <div class="flex justify-between items-center mb-2">
+                 <img src="https://github.com/max-vorozhko/rankova_studio_drum/blob/main/Rankova%20logo.png?raw=true" alt="Логотип" class="h-10">
+                 <h1 class="text-md font-bold text-slate-800 text-right">Драм Тренажер</h1>
             </div>
-            <button id="play-button" class="pro-button" disabled>Грати</button>
+            
+            <div class="flex justify-between items-center bg-slate-100 rounded-lg p-2 mb-2">
+                <div class="text-left">
+                    <p class="text-xs font-medium text-slate-500">РАХУНОК</p>
+                    <p id="score" class="text-xl font-bold" style="color: #eab308;">0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs font-medium text-slate-500">ЧАС</p>
+                    <p id="timer" class="text-xl font-bold text-slate-700">01:00</p>
+                </div>
+                <button id="start-button" class="pro-button" disabled>Почати</button>
+            </div>
+            
+            <div class="bg-slate-50 rounded-lg p-2 space-y-2 mb-2">
+                <p class="text-xs font-medium text-slate-500 text-center">Обери стиль</p>
+                <div id="style-controls" class="flex flex-wrap justify-center gap-2">
+                     <button class="control-btn" data-style="rock">Рок-біт №1</button>
+                     <button class="control-btn" data-style="dance">Танцювальний Грув</button>
+                     <button class="control-btn" data-style="break">Простий Брейк</button>
+                </div>
+            </div>
+
+            <div class="bg-slate-100 rounded-lg p-2 mb-2">
+                 <p class="text-xs font-medium text-slate-500 text-center mb-1">Обери складність</p>
+                <div id="difficulty-controls" class="flex justify-center gap-x-2">
+                    <button class="control-btn" data-difficulty="easy">Легко</button>
+                    <button class="control-btn active" data-difficulty="normal">Середнє</button>
+                    <button class="control-btn" data-difficulty="hard">Складно</button>
+                </div>
+            </div>
+
+            <p id="message" class="h-5 mb-1 text-center text-sm font-semibold text-slate-600">Завантаження...</p>
+
+            <div class="game-area">
+                <div class="lane-container">
+                    <div id="lane-kick" class="lane"></div>
+                    <div id="lane-snare" class="lane"></div>
+                    <div id="lane-hi-hat" class="lane"></div>
+                    <div id="lane-tom" class="lane"></div>
+                </div>
+                <div id="drum-pad-container">
+                    <div id="pad-kick" class="drum-pad kick" data-drum="kick"><span class="drum-name">KICK</span><span class="key-hint">(D)</span></div>
+                    <div id="pad-snare" class="drum-pad snare" data-drum="snare"><span class="drum-name">SNARE</span><span class="key-hint">(F)</span></div>
+                    <div id="pad-hi-hat" class="drum-pad hi-hat" data-drum="hi-hat"><span class="drum-name">HI-HAT</span><span class="key-hint">(J)</span></div>
+                    <div id="pad-tom" class="drum-pad tom" data-drum="tom"><span class="drum-name">TOM</span><span class="key-hint">(K)</span></div>
+                </div>
+            </div>
+             <div class="mt-2 flex gap-x-2">
+                <button id="leaderboard-btn" class="pro-button flex-1" style="background-color:#f1f5f9; color:#475569;">🏆 Таблиця лідерів</button>
+                <a href="https://n813529.alteg.io" target="_blank" class="pro-button flex-1 text-center">Запис на урок</a>
+            </div>
         </div>
 
-        <div id="gemini-block" class="bg-slate-50 rounded-lg p-2 space-y-2 mb-2">
-            <p class="text-xs font-medium text-slate-500 text-center">Опиши ритм, який хочеш зіграти:</p>
-            <input type="text" id="gemini-prompt" class="gemini-input" placeholder="напр. простий рок-біт">
-            <button id="gemini-generate-button" class="pro-button w-full text-sm">✨ Згенерувати Ритм</button>
+        <!-- Leaderboard View -->
+        <div id="leaderboard-view" class="main-view hidden">
+            <h1 class="text-2xl font-bold text-slate-800 mb-4 text-center">🏆 Таблиця лідерів</h1>
+            <div id="leaderboard-list" class="space-y-1 text-sm max-h-96 overflow-y-auto p-2 bg-slate-50 rounded-lg">
+                <!-- Leaderboard entries go here -->
+            </div>
+            <button id="back-to-game-btn" class="pro-button w-full mt-4">Назад до гри</button>
         </div>
 
-        <div class="bg-slate-100 rounded-lg p-2 mb-2">
-            <p class="text-xs font-medium text-slate-500 text-center mb-1">Швидкість</p>
-            <div id="speed-controls" class="flex justify-center gap-x-2">
-                <button class="speed-btn" data-speed="slow">Повільно</button>
-                <button class="speed-btn active" data-speed="normal">Нормально</button>
-                <button class="speed-btn" data-speed="fast">Швидко</button>
-            </div>
-        </div>
-
-        <p id="message" class="h-5 mb-1 text-center text-sm font-semibold text-slate-600">Завантаження звуків...</p>
-
-        <div class="game-area">
-            <div class="lane-container">
-                <div id="lane-kick" class="lane"></div>
-                <div id="lane-snare" class="lane"></div>
-                <div id="lane-hi-hat" class="lane"></div>
-                <div id="lane-tom" class="lane"></div>
-            </div>
-            <div id="drum-pad-container">
-                <div id="pad-kick" class="drum-pad kick" data-drum="kick">
-                    <span class="drum-name">KICK</span><span class="key-hint">(D)</span>
-                </div>
-                <div id="pad-snare" class="drum-pad snare" data-drum="snare">
-                    <span class="drum-name">SNARE</span><span class="key-hint">(F)</span>
-                </div>
-                <div id="pad-hi-hat" class="drum-pad hi-hat" data-drum="hi-hat">
-                    <span class="drum-name">HI-HAT</span><span class="key-hint">(J)</span>
-                </div>
-                <div id="pad-tom" class="drum-pad tom" data-drum="tom">
-                    <span class="drum-name">TOM</span><span class="key-hint">(K)</span>
+        <!-- Save Score Modal -->
+        <div id="save-score-modal" class="modal-overlay">
+            <div class="bg-white p-6 rounded-xl shadow-lg text-center w-11/12 max-w-xs">
+                <h2 class="text-xl font-bold text-slate-800">Гра завершена!</h2>
+                <p class="text-slate-600 mt-2">Твій результат: <span id="final-score" class="font-bold text-lg" style="color: #eab308;">0</span></p>
+                <p class="mt-4 text-sm">Введи своє ім'я, щоб зберегти рекорд:</p>
+                <input type="text" id="player-name" maxlength="20" class="mt-2 w-full border border-slate-300 rounded-md p-2 text-center" placeholder="Твоє ім'я">
+                <div class="mt-4 flex gap-x-2">
+                    <button id="save-score-btn" class="pro-button flex-1 text-sm">Зберегти</button>
+                    <button id="cancel-save-btn" class="pro-button flex-1 text-sm" style="background-color:#f1f5f9; color:#475569;">Пропустити</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpUNB2yrZUXlo1gCNYDzJqGK2s0IJUbMo",
+            authDomain: "rankova-drum-falling-notes.firebaseapp.com",
+            projectId: "rankova-drum-falling-notes",
+            storageBucket: "rankova-drum-falling-notes.firebasestorage.app",
+            messagingSenderId: "496423964661",
+            appId: "1:496423964661:web:e7ece64e8dff92a64b5abc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const audioBuffers = {};
 
@@ -216,18 +250,48 @@
             'tom': 'https://raw.githubusercontent.com/wesbos/JavaScript30/master/01%20-%20JavaScript%20Drum%20Kit/sounds/tom.wav'
         };
 
-        const elements = {
-            playButton: document.getElementById('play-button'),
-            scoreDisplay: document.getElementById('score'),
-            messageDisplay: document.getElementById('message'),
-            laneContainer: document.querySelector('.lane-container'),
-            drumPadContainer: document.getElementById('drum-pad-container'),
-            geminiPrompt: document.getElementById('gemini-prompt'),
-            geminiGenerateButton: document.getElementById('gemini-generate-button'),
-            geminiBlock: document.getElementById('gemini-block'),
-            speedControls: document.querySelectorAll('.speed-btn'),
+        const rhythmPatterns = {
+            rock: [
+                { time: 0, drum: 'kick' }, { time: 250, drum: 'hi-hat' }, { time: 500, drum: 'snare' }, { time: 750, drum: 'hi-hat' },
+                { time: 1000, drum: 'kick' }, { time: 1250, drum: 'hi-hat' }, { time: 1500, drum: 'snare' }, { time: 1750, drum: 'hi-hat' },
+                { time: 2000, drum: 'kick' }, { time: 2250, drum: 'hi-hat' }, { time: 2500, drum: 'snare' }, { time: 2750, drum: 'hi-hat' },
+                { time: 3000, drum: 'kick' }, { time: 3250, drum: 'hi-hat' }, { time: 3500, drum: 'snare' }, { time: 3750, drum: 'hi-hat' }
+            ],
+            dance: [
+                { time: 0, drum: 'kick' }, { time: 250, drum: 'hi-hat' }, { time: 500, drum: 'kick' }, { time: 500, drum: 'snare' }, { time: 750, drum: 'hi-hat' },
+                { time: 1000, drum: 'kick' }, { time: 1250, drum: 'hi-hat' }, { time: 1500, drum: 'kick' }, { time: 1500, drum: 'snare' }, { time: 1750, drum: 'hi-hat' },
+                { time: 2000, drum: 'kick' }, { time: 2250, drum: 'hi-hat' }, { time: 2500, drum: 'kick' }, { time: 2500, drum: 'snare' }, { time: 2750, drum: 'hi-hat' },
+                { time: 3000, drum: 'kick' }, { time: 3250, drum: 'hi-hat' }, { time: 3500, drum: 'kick' }, { time: 3500, drum: 'snare' }, { time: 3750, drum: 'hi-hat' }
+            ],
+            break: [
+                { time: 0, drum: 'kick' }, { time: 250, drum: 'kick' }, { time: 500, drum: 'snare' }, { time: 750, drum: 'tom' },
+                { time: 1000, drum: 'tom' }, { time: 1250, drum: 'snare' }, { time: 1500, drum: 'kick' }, { time: 1750, drum: 'hi-hat' },
+                { time: 2000, drum: 'kick' }, { time: 2250, drum: 'tom' }, { time: 2500, drum: 'snare' }, { time: 2750, drum: 'snare' },
+                { time: 3000, drum: 'kick' }, { time: 3250, drum: 'hi-hat' }, { time: 3500, drum: 'tom' }, { time: 3750, drum: 'snare' }
+            ]
         };
 
+        const elements = {
+            startButton: document.getElementById('start-button'),
+            scoreDisplay: document.getElementById('score'),
+            timerDisplay: document.getElementById('timer'),
+            messageDisplay: document.getElementById('message'),
+            styleControls: document.querySelectorAll('#style-controls .control-btn'),
+            difficultyControls: document.querySelectorAll('#difficulty-controls .control-btn'),
+            gameView: document.getElementById('game-view'),
+            leaderboardView: document.getElementById('leaderboard-view'),
+            leaderboardBtn: document.getElementById('leaderboard-btn'),
+            backToGameBtn: document.getElementById('back-to-game-btn'),
+            leaderboardList: document.getElementById('leaderboard-list'),
+            saveScoreModal: document.getElementById('save-score-modal'),
+            finalScoreDisplay: document.getElementById('final-score'),
+            playerNameInput: document.getElementById('player-name'),
+            saveScoreBtn: document.getElementById('save-score-btn'),
+            cancelSaveBtn: document.getElementById('cancel-save-btn'),
+            laneContainer: document.querySelector('.lane-container'),
+            drumPadContainer: document.getElementById('drum-pad-container'),
+        };
+        
         const drumPads = {
             'kick': document.getElementById('pad-kick'),
             'snare': document.getElementById('pad-snare'),
@@ -247,14 +311,13 @@
             originalPadClasses[key] = drumPads[key].className;
         });
 
-        let score = 0;
-        let gameActive = false;
-        let soundsReady = false;
-        let notesOnScreen = [];
-        let generatedRhythm = [];
-        const NOTE_FALL_SPEEDS = { slow: 1200, normal: 900, fast: 700 };
+        let score = 0, gameActive = false, soundsReady = false, timeLeft = 60;
+        let gameTimer, rhythmInterval;
+        let currentRhythm = [], currentStyleName = '', currentDifficultyName = 'Середнє';
+        const NOTE_FALL_SPEEDS = { easy: 1200, normal: 900, hard: 700 };
         let currentFallSpeed = NOTE_FALL_SPEEDS.normal;
         const HIT_ZONE_OFFSET = 50;
+        let notesOnScreen = [];
 
         async function loadSound(name, url) {
             const response = await fetch(url);
@@ -266,15 +329,14 @@
             try {
                 const promises = Object.entries(drumSounds).map(([name, url]) => loadSound(name, url));
                 await Promise.all(promises);
-                elements.messageDisplay.textContent = "Готово! Створи свій ритм.";
-                elements.geminiGenerateButton.disabled = false;
                 soundsReady = true;
+                elements.messageDisplay.textContent = "Обери стиль та складність.";
             } catch (error) {
                 elements.messageDisplay.textContent = "Помилка завантаження звуків.";
                 console.error("Audio loading error:", error);
             }
         }
-
+        
         function playSound(name) {
             if (!soundsReady || !audioBuffers[name]) return;
             if (audioContext.state === 'suspended') { audioContext.resume().catch(e => console.error(e)); }
@@ -284,48 +346,132 @@
             source.start(0);
         }
 
+        async function init() {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Anonymous sign-in failed:", error);
+                elements.leaderboardBtn.disabled = true;
+                elements.messageDisplay.textContent = 'Помилка таблиці лідерів.';
+            }
+            await loadAllSounds();
+            setupEventListeners();
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+            const seconds = String(timeLeft % 60).padStart(2, '0');
+            elements.timerDisplay.textContent = `${minutes}:${seconds}`;
+        }
+
         function startGame() {
-            if (!soundsReady || generatedRhythm.length === 0) return;
+            if (!soundsReady || currentRhythm.length === 0) return;
             score = 0;
             elements.scoreDisplay.textContent = score;
             gameActive = true;
-            elements.playButton.disabled = true;
-            elements.geminiGenerateButton.disabled = true;
-            elements.geminiPrompt.disabled = true;
-            elements.playButton.textContent = 'Гра триває...';
+            elements.startButton.disabled = true;
+            elements.startButton.textContent = 'Гра триває...';
             elements.messageDisplay.textContent = 'Грай!';
             notesOnScreen.forEach(note => note.element.remove());
             notesOnScreen = [];
-            playGeneratedRhythm();
+
+            timeLeft = 60;
+            updateTimerDisplay();
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    endGame(true); // Game ended by timer
+                }
+            }, 1000);
+            
+            let beatIndex = 0;
+            const beatInterval = 250; 
+            rhythmInterval = setInterval(() => {
+                 if (!gameActive) return;
+                 const patternTime = (beatIndex * beatInterval) % 4000; 
+                 const hits = currentRhythm.filter(note => note.time === patternTime);
+                 hits.forEach(hit => spawnNote(hit.drum));
+                 beatIndex++;
+            }, beatInterval);
         }
 
-        function playGeneratedRhythm() {
-            generatedRhythm.forEach(beat => {
-                setTimeout(() => {
-                    if (gameActive) {
-                        spawnNote(beat.drum);
-                    }
-                }, beat.time);
-            });
+        function endGame(timedOut = false) {
+            gameActive = false;
+            clearInterval(gameTimer);
+            clearInterval(rhythmInterval);
             
-            const lastNoteTime = generatedRhythm[generatedRhythm.length - 1]?.time || 0;
-            setTimeout(() => {
-                if(gameActive) {
-                    endGame();
-                }
-            }, lastNoteTime + currentFallSpeed + 500);
+            elements.startButton.disabled = false;
+            elements.startButton.textContent = 'Почати';
+            
+            if (timedOut) {
+                elements.finalScoreDisplay.textContent = score;
+                elements.saveScoreModal.classList.add('visible');
+            }
         }
         
-        function endGame() {
-            gameActive = false;
-            elements.playButton.disabled = false;
-            elements.playButton.textContent = 'Грати Знову';
-            elements.geminiGenerateButton.disabled = false;
-            elements.geminiPrompt.disabled = false;
-            elements.geminiBlock.style.display = 'block'; // Show Gemini block
-            elements.messageDisplay.textContent = `Фінальний рахунок: ${score}!`;
+        function resetGame() {
+            elements.saveScoreModal.classList.remove('visible');
+            score = 0;
+            elements.scoreDisplay.textContent = 0;
+            timeLeft = 60;
+            updateTimerDisplay();
+            elements.messageDisplay.textContent = "Обери стиль та складність.";
         }
+        
+        async function saveScore() {
+            const playerName = elements.playerNameInput.value.trim();
+            if (!playerName) {
+                alert("Будь ласка, введи ім'я.");
+                return;
+            }
+            try {
+                await addDoc(collection(db, "leaderboard"), {
+                    name: playerName,
+                    score: score,
+                    style: currentStyleName,
+                    difficulty: currentDifficultyName,
+                    timestamp: serverTimestamp()
+                });
+                resetGame();
+                elements.leaderboardBtn.click();
+            } catch (error) {
+                console.error("Error writing to leaderboard: ", error);
+                alert("Не вдалося зберегти результат.");
+            }
+        }
+        
+        function showLeaderboard() {
+            elements.gameView.classList.add('hidden');
+            elements.leaderboardView.classList.remove('hidden');
 
+            const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(10));
+            onSnapshot(q, (snapshot) => {
+                elements.leaderboardList.innerHTML = '';
+                if (snapshot.empty) {
+                     elements.leaderboardList.innerHTML = '<p class="text-center p-4">Ще немає рекордів. Будь першим!</p>';
+                     return;
+                }
+                snapshot.forEach((doc, index) => {
+                    const data = doc.data();
+                    const entry = document.createElement('div');
+                    entry.className = 'flex justify-between p-2 rounded-md';
+                    if(index % 2 === 0) entry.classList.add('bg-slate-100');
+                    entry.innerHTML = `
+                        <div>
+                            <span class="font-bold">${index + 1}. ${data.name}</span>
+                            <span class="text-xs text-slate-500 ml-2">${data.style} / ${data.difficulty}</span>
+                        </div>
+                        <span class="font-bold text-slate-800">${data.score}</span>
+                    `;
+                    elements.leaderboardList.appendChild(entry);
+                });
+            }, (error) => {
+                 console.error("Leaderboard fetch error:", error);
+                 elements.leaderboardList.innerHTML = '<p class="text-center p-4 text-red-500">Помилка завантаження.</p>';
+            });
+        }
+        
         function spawnNote(drumName) {
             const laneElement = drumLanes[drumName];
             if(!laneElement) return;
@@ -391,111 +537,58 @@
         function handleMiss(note) {
             animatePad(note.drum, 'hit-miss');
         }
-        
-        async function generateAIRhythm() {
-            const userPrompt = elements.geminiPrompt.value;
-            if (!userPrompt) {
-                elements.messageDisplay.textContent = "Введи опис ритму.";
-                return;
-            }
 
-            elements.geminiGenerateButton.disabled = true;
-            elements.geminiGenerateButton.textContent = "✨ Генеруємо...";
-            elements.messageDisplay.textContent = "AI створює твій унікальний біт...";
-            elements.playButton.disabled = true;
-
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            
-            const systemPrompt = `You are a drum machine. Generate a simple 8-second drum pattern based on the user's prompt. The pattern should be playable by a beginner.
-            - The output MUST be a valid JSON array.
-            - Each object in the array represents a drum hit and must have two properties:
-              1. "time": The time of the hit in milliseconds from the start (0 to 8000).
-              2. "drum": The drum to hit, which must be one of: "kick", "snare", "hi-hat", "tom".
-            - Do not include any notes after 8000 milliseconds.
-            - Ensure the rhythm is not too dense or complex. Start with a simple beat.`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userPrompt }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "ARRAY",
-                        items: {
-                            type: "OBJECT",
-                            properties: {
-                                "time": { "type": "NUMBER" },
-                                "drum": { "type": "STRING" }
-                            },
-                            required: ["time", "drum"]
-                        }
-                    }
+        function setupEventListeners() {
+            elements.startButton.addEventListener('click', () => {
+                if (audioContext.state === 'suspended') {
+                     audioContext.resume().then(() => { if(!gameActive && soundsReady) startGame(); });
+                } else {
+                    if(!gameActive && soundsReady) startGame();
                 }
-            };
-            
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+            });
+
+            elements.leaderboardBtn.addEventListener('click', showLeaderboard);
+            elements.backToGameBtn.addEventListener('click', () => {
+                elements.leaderboardView.classList.add('hidden');
+                elements.gameView.classList.remove('hidden');
+            });
+            elements.saveScoreBtn.addEventListener('click', saveScore);
+            elements.cancelSaveBtn.addEventListener('click', resetGame);
+
+            elements.styleControls.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (gameActive) return;
+                    elements.styleControls.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentRhythm = rhythmPatterns[btn.dataset.style];
+                    currentStyleName = btn.textContent;
+                    elements.startButton.disabled = false;
+                    elements.messageDisplay.textContent = "Готовий? Натисни 'Почати'";
                 });
+            });
 
-                if (!response.ok) {
-                    throw new Error(`API error: ${response.statusText}`);
-                }
-                const result = await response.json();
-                const jsonText = result.candidates[0].content.parts[0].text;
-                const rhythm = JSON.parse(jsonText);
+            elements.difficultyControls.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (gameActive) return;
+                    elements.difficultyControls.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFallSpeed = NOTE_FALL_SPEEDS[btn.dataset.difficulty];
+                    currentDifficultyName = btn.textContent;
+                });
+            });
 
-                const validDrums = ['kick', 'snare', 'hi-hat', 'tom'];
-                generatedRhythm = rhythm
-                    .filter(beat => validDrums.includes(beat.drum) && typeof beat.time === 'number')
-                    .sort((a, b) => a.time - b.time);
-
-                elements.messageDisplay.textContent = "Ритм згенеровано! Натисни 'Грати'.";
-                elements.playButton.disabled = false;
-                elements.geminiBlock.style.display = 'none'; // Hide Gemini block
-            } catch(error) {
-                console.error("Gemini API error:", error);
-                elements.messageDisplay.textContent = "Помилка генерації. Спробуй ще раз.";
-            } finally {
-                elements.geminiGenerateButton.disabled = false;
-                elements.geminiGenerateButton.textContent = "✨ Згенерувати Ритм";
-            }
+            Object.values(drumPads).forEach(pad => {
+                pad.addEventListener('click', () => handleKeyPress(pad.dataset.drum));
+            });
+            
+            window.addEventListener('keydown', (e) => {
+                const keyMap = { 'd': 'kick', 'f': 'snare', 'j': 'hi-hat', 'k': 'tom' };
+                const drumToPlay = keyMap[e.key.toLowerCase()];
+                if (drumToPlay) handleKeyPress(drumToPlay);
+            });
         }
 
-        elements.playButton.addEventListener('click', () => {
-            if (audioContext.state === 'suspended') {
-                 audioContext.resume().then(() => { if(!gameActive && soundsReady) startGame(); });
-            } else {
-                if(!gameActive && soundsReady) startGame();
-            }
-        });
-        
-        elements.geminiGenerateButton.addEventListener('click', generateAIRhythm);
-
-        Object.values(drumPads).forEach(pad => {
-            pad.addEventListener('click', () => handleKeyPress(pad.dataset.drum));
-        });
-        
-        window.addEventListener('keydown', (e) => {
-            const keyMap = { 'd': 'kick', 'f': 'snare', 'j': 'hi-hat', 'k': 'tom' };
-            const drumToPlay = keyMap[e.key.toLowerCase()];
-            if (drumToPlay) handleKeyPress(drumToPlay);
-        });
-
-        elements.speedControls.forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (gameActive) return;
-                elements.speedControls.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFallSpeed = NOTE_FALL_SPEEDS[btn.dataset.speed];
-            });
-        });
-
-        elements.geminiGenerateButton.disabled = true;
-        loadAllSounds();
+        init();
     </script>
 </body>
 </html>
