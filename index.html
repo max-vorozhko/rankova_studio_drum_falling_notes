@@ -452,19 +452,21 @@
                      elements.leaderboardList.innerHTML = '<p class="text-center p-4">Ще немає рекордів. Будь першим!</p>';
                      return;
                 }
-                snapshot.forEach((doc, index) => {
+                let rank = 1; // FIX: Initialize a counter
+                snapshot.forEach((doc) => { // FIX: Remove index, it's not provided
                     const data = doc.data();
                     const entry = document.createElement('div');
                     entry.className = 'flex justify-between p-2 rounded-md';
-                    if(index % 2 === 0) entry.classList.add('bg-slate-100');
+                    if((rank - 1) % 2 === 0) entry.classList.add('bg-slate-100');
                     entry.innerHTML = `
                         <div>
-                            <span class="font-bold">${index + 1}. ${data.name}</span>
+                            <span class="font-bold">${rank}. ${data.name}</span>
                             <span class="text-xs text-slate-500 ml-2">${data.style} / ${data.difficulty}</span>
                         </div>
                         <span class="font-bold text-slate-800">${data.score}</span>
                     `;
                     elements.leaderboardList.appendChild(entry);
+                    rank++; // FIX: Increment the counter
                 });
             }, (error) => {
                  console.error("Leaderboard fetch error:", error);
