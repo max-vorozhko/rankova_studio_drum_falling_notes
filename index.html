@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Драм Тренажер: Падаючі Ноти | Rankova Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            background-color: #e2e8f0; /* Light theme background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: #ffffff; /* White background */
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            position: relative;
+        }
+        .game-area {
+            position: relative;
+            height: 280px;
+        }
+        .lane-container {
+            display: flex;
+            justify-content: space-around;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 100px;
+            overflow: hidden;
+        }
+        .lane {
+            width: 25%;
+            border-left: 1px dashed #cbd5e1;
+            border-right: 1px dashed #cbd5e1;
+            position: relative;
+        }
+        .lane:first-child { border-left: none; }
+        .lane:last-child { border-right: none; }
+
+        .note {
+            position: absolute;
+            top: -40px;
+            width: 50px;
+            height: 25px;
+            border-radius: 12.5px;
+            left: calc(50% - 25px);
+            transition: transform linear;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .note.kick { background-color: #dc2626; }
+        .note.snare { background-color: #4f46e5; }
+        .note.hi-hat { background-color: #facc15; }
+        .note.tom { background-color: #16a34a; }
+        .note.hit {
+            opacity: 0;
+            transition: opacity 0.1s ease-out;
+        }
+        
+        #drum-pad-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            border-top: 4px solid #ffd200;
+            box-shadow: 0 -5px 15px rgba(255, 210, 0, 0.3);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 5px;
+            background-color: #ffffff;
+        }
+        .drum-pad {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out;
+            color: white;
+            font-weight: 700;
+        }
+        .drum-pad .drum-name { font-size: 0.8rem; }
+        .drum-pad .key-hint { font-size: 0.6rem; opacity: 0.7; }
+        
+        .drum-pad.kick { background-color: #dc2626; }
+        .drum-pad.snare { background-color: #4f46e5; }
+        .drum-pad.hi-hat { background-color: #facc15; }
+        .drum-pad.tom { background-color: #16a34a; }
+
+        .drum-pad.playing {
+            transform: scale(0.95);
+            filter: brightness(1.3);
+        }
+        .drum-pad.hit-correct { background-color: #22c55e !important; }
+        .drum-pad.hit-miss { background-color: #ef4444 !important; }
+
+        .pro-button {
+            transition: all 0.2s ease-in-out; border-radius: 8px;
+            padding: 8px 16px; font-weight: 600; cursor: pointer;
+            background-color: #ffd200; color: #1e293b; border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .pro-button:hover:not(:disabled) { background-color: #e6be00; }
+        .pro-button:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .gemini-input {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            border-radius: 8px;
+            padding: 8px;
+            width: 100%;
+        }
+        
+        .speed-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+            background-color: #f1f5f9;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .speed-btn.active {
+            background-color: #ffd200;
+            color: #1e293b;
+            border-color: #ffd200;
+        }
+        .speed-btn:not(.active):hover {
+            background-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <img src="https://github.com/max-vorozhko/rankova_studio_drum/blob/main/Rankova%20logo.png?raw=true" alt="Логотип" class="mx-auto mb-2 h-14">
+        <h1 class="text-xl font-bold text-slate-800 mb-1 text-center">Драм Тренажер: Падаючі Ноти</h1>
+        
+        <div class="flex justify-between items-center bg-slate-100 rounded-lg p-2 mb-2">
+            <div class="text-left">
+                <p class="text-xs font-medium text-slate-500">РАХУНОК</p>
+                <p id="score" class="text-xl font-bold" style="color: #eab308;">0</p>
+            </div>
+            <button id="play-button" class="pro-button" disabled>Грати</button>
+        </div>
+
+        <div id="gemini-block" class="bg-slate-50 rounded-lg p-2 space-y-2 mb-2">
+            <p class="text-xs font-medium text-slate-500 text-center">Опиши ритм, який хочеш зіграти:</p>
+            <input type="text" id="gemini-prompt" class="gemini-input" placeholder="напр. простий рок-біт">
+            <button id="gemini-generate-button" class="pro-button w-full text-sm">✨ Згенерувати Ритм</button>
+        </div>
+
+        <div class="bg-slate-100 rounded-lg p-2 mb-2">
+            <p class="text-xs font-medium text-slate-500 text-center mb-1">Швидкість</p>
+            <div id="speed-controls" class="flex justify-center gap-x-2">
+                <button class="speed-btn" data-speed="slow">Повільно</button>
+                <button class="speed-btn active" data-speed="normal">Нормально</button>
+                <button class="speed-btn" data-speed="fast">Швидко</button>
+            </div>
+        </div>
+
+        <p id="message" class="h-5 mb-1 text-center text-sm font-semibold text-slate-600">Завантаження звуків...</p>
+
+        <div class="game-area">
+            <div class="lane-container">
+                <div id="lane-kick" class="lane"></div>
+                <div id="lane-snare" class="lane"></div>
+                <div id="lane-hi-hat" class="lane"></div>
+                <div id="lane-tom" class="lane"></div>
+            </div>
+            <div id="drum-pad-container">
+                <div id="pad-kick" class="drum-pad kick" data-drum="kick">
+                    <span class="drum-name">KICK</span><span class="key-hint">(D)</span>
+                </div>
+                <div id="pad-snare" class="drum-pad snare" data-drum="snare">
+                    <span class="drum-name">SNARE</span><span class="key-hint">(F)</span>
+                </div>
+                <div id="pad-hi-hat" class="drum-pad hi-hat" data-drum="hi-hat">
+                    <span class="drum-name">HI-HAT</span><span class="key-hint">(J)</span>
+                </div>
+                <div id="pad-tom" class="drum-pad tom" data-drum="tom">
+                    <span class="drum-name">TOM</span><span class="key-hint">(K)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffers = {};
+
+        const drumSounds = {
+            'kick': 'https://raw.githubusercontent.com/wesbos/JavaScript30/master/01%20-%20JavaScript%20Drum%20Kit/sounds/kick.wav',
+            'snare': 'https://raw.githubusercontent.com/wesbos/JavaScript30/master/01%20-%20JavaScript%20Drum%20Kit/sounds/snare.wav',
+            'hi-hat': 'https://raw.githubusercontent.com/wesbos/JavaScript30/master/01%20-%20JavaScript%20Drum%20Kit/sounds/hihat.wav',
+            'tom': 'https://raw.githubusercontent.com/wesbos/JavaScript30/master/01%20-%20JavaScript%20Drum%20Kit/sounds/tom.wav'
+        };
+
+        const elements = {
+            playButton: document.getElementById('play-button'),
+            scoreDisplay: document.getElementById('score'),
+            messageDisplay: document.getElementById('message'),
+            laneContainer: document.querySelector('.lane-container'),
+            drumPadContainer: document.getElementById('drum-pad-container'),
+            geminiPrompt: document.getElementById('gemini-prompt'),
+            geminiGenerateButton: document.getElementById('gemini-generate-button'),
+            geminiBlock: document.getElementById('gemini-block'),
+            speedControls: document.querySelectorAll('.speed-btn'),
+        };
+
+        const drumPads = {
+            'kick': document.getElementById('pad-kick'),
+            'snare': document.getElementById('pad-snare'),
+            'hi-hat': document.getElementById('pad-hi-hat'),
+            'tom': document.getElementById('pad-tom'),
+        };
+
+        const drumLanes = {
+            'kick': document.getElementById('lane-kick'),
+            'snare': document.getElementById('lane-snare'),
+            'hi-hat': document.getElementById('lane-hi-hat'),
+            'tom': document.getElementById('lane-tom'),
+        };
+        
+        const originalPadClasses = {};
+        Object.keys(drumPads).forEach(key => {
+            originalPadClasses[key] = drumPads[key].className;
+        });
+
+        let score = 0;
+        let gameActive = false;
+        let soundsReady = false;
+        let notesOnScreen = [];
+        let generatedRhythm = [];
+        const NOTE_FALL_SPEEDS = { slow: 1200, normal: 900, fast: 700 };
+        let currentFallSpeed = NOTE_FALL_SPEEDS.normal;
+        const HIT_ZONE_OFFSET = 50;
+
+        async function loadSound(name, url) {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            audioBuffers[name] = await audioContext.decodeAudioData(arrayBuffer);
+        }
+
+        async function loadAllSounds() {
+            try {
+                const promises = Object.entries(drumSounds).map(([name, url]) => loadSound(name, url));
+                await Promise.all(promises);
+                elements.messageDisplay.textContent = "Готово! Створи свій ритм.";
+                elements.geminiGenerateButton.disabled = false;
+                soundsReady = true;
+            } catch (error) {
+                elements.messageDisplay.textContent = "Помилка завантаження звуків.";
+                console.error("Audio loading error:", error);
+            }
+        }
+
+        function playSound(name) {
+            if (!soundsReady || !audioBuffers[name]) return;
+            if (audioContext.state === 'suspended') { audioContext.resume().catch(e => console.error(e)); }
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffers[name];
+            source.connect(audioContext.destination);
+            source.start(0);
+        }
+
+        function startGame() {
+            if (!soundsReady || generatedRhythm.length === 0) return;
+            score = 0;
+            elements.scoreDisplay.textContent = score;
+            gameActive = true;
+            elements.playButton.disabled = true;
+            elements.geminiGenerateButton.disabled = true;
+            elements.geminiPrompt.disabled = true;
+            elements.playButton.textContent = 'Гра триває...';
+            elements.messageDisplay.textContent = 'Грай!';
+            notesOnScreen.forEach(note => note.element.remove());
+            notesOnScreen = [];
+            playGeneratedRhythm();
+        }
+
+        function playGeneratedRhythm() {
+            generatedRhythm.forEach(beat => {
+                setTimeout(() => {
+                    if (gameActive) {
+                        spawnNote(beat.drum);
+                    }
+                }, beat.time);
+            });
+            
+            const lastNoteTime = generatedRhythm[generatedRhythm.length - 1]?.time || 0;
+            setTimeout(() => {
+                if(gameActive) {
+                    endGame();
+                }
+            }, lastNoteTime + currentFallSpeed + 500);
+        }
+        
+        function endGame() {
+            gameActive = false;
+            elements.playButton.disabled = false;
+            elements.playButton.textContent = 'Грати Знову';
+            elements.geminiGenerateButton.disabled = false;
+            elements.geminiPrompt.disabled = false;
+            elements.geminiBlock.style.display = 'block'; // Show Gemini block
+            elements.messageDisplay.textContent = `Фінальний рахунок: ${score}!`;
+        }
+
+        function spawnNote(drumName) {
+            const laneElement = drumLanes[drumName];
+            if(!laneElement) return;
+
+            const noteElement = document.createElement('div');
+            noteElement.className = `note ${drumName}`;
+            laneElement.appendChild(noteElement);
+
+            const note = { element: noteElement, drum: drumName, hasBeenHit: false };
+            notesOnScreen.push(note);
+
+            note.fallTimer = setTimeout(() => {
+                if (!note.hasBeenHit) handleMiss(note);
+                note.element.remove();
+                notesOnScreen = notesOnScreen.filter(n => n !== note);
+            }, currentFallSpeed);
+            
+            noteElement.style.transform = `translateY(${elements.laneContainer.clientHeight + 40}px)`;
+            noteElement.style.transitionDuration = `${currentFallSpeed / 1000}s`;
+        }
+        
+        function animatePad(drumName, result) {
+            const pad = drumPads[drumName];
+            if (!pad) return;
+            
+            pad.classList.add('playing');
+            if (result) pad.className = `drum-pad playing ${result}`;
+            
+            setTimeout(() => {
+                 pad.className = originalPadClasses[drumName];
+            }, 200);
+        }
+
+        function handleKeyPress(drumName) {
+            playSound(drumName);
+            if (!gameActive) return;
+
+            let hitRegistered = false;
+            const hitLineY = elements.drumPadContainer.getBoundingClientRect().top;
+
+            for (let i = notesOnScreen.length - 1; i >= 0; i--) {
+                const note = notesOnScreen[i];
+                if (note.drum === drumName && !note.hasBeenHit) {
+                    const noteRect = note.element.getBoundingClientRect();
+                    const noteCenterY = noteRect.top + (noteRect.height / 2);
+
+                    if (Math.abs(noteCenterY - hitLineY) < HIT_ZONE_OFFSET) {
+                        score++;
+                        elements.scoreDisplay.textContent = score;
+                        note.hasBeenHit = true;
+                        note.element.classList.add('hit');
+                        animatePad(drumName, 'hit-correct');
+                        hitRegistered = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!hitRegistered) animatePad(drumName, 'hit-miss');
+            else animatePad(drumName);
+        }
+
+        function handleMiss(note) {
+            animatePad(note.drum, 'hit-miss');
+        }
+        
+        async function generateAIRhythm() {
+            const userPrompt = elements.geminiPrompt.value;
+            if (!userPrompt) {
+                elements.messageDisplay.textContent = "Введи опис ритму.";
+                return;
+            }
+
+            elements.geminiGenerateButton.disabled = true;
+            elements.geminiGenerateButton.textContent = "✨ Генеруємо...";
+            elements.messageDisplay.textContent = "AI створює твій унікальний біт...";
+            elements.playButton.disabled = true;
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const systemPrompt = `You are a drum machine. Generate a simple 8-second drum pattern based on the user's prompt. The pattern should be playable by a beginner.
+            - The output MUST be a valid JSON array.
+            - Each object in the array represents a drum hit and must have two properties:
+              1. "time": The time of the hit in milliseconds from the start (0 to 8000).
+              2. "drum": The drum to hit, which must be one of: "kick", "snare", "hi-hat", "tom".
+            - Do not include any notes after 8000 milliseconds.
+            - Ensure the rhythm is not too dense or complex. Start with a simple beat.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "time": { "type": "NUMBER" },
+                                "drum": { "type": "STRING" }
+                            },
+                            required: ["time", "drum"]
+                        }
+                    }
+                }
+            };
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.statusText}`);
+                }
+                const result = await response.json();
+                const jsonText = result.candidates[0].content.parts[0].text;
+                const rhythm = JSON.parse(jsonText);
+
+                const validDrums = ['kick', 'snare', 'hi-hat', 'tom'];
+                generatedRhythm = rhythm
+                    .filter(beat => validDrums.includes(beat.drum) && typeof beat.time === 'number')
+                    .sort((a, b) => a.time - b.time);
+
+                elements.messageDisplay.textContent = "Ритм згенеровано! Натисни 'Грати'.";
+                elements.playButton.disabled = false;
+                elements.geminiBlock.style.display = 'none'; // Hide Gemini block
+            } catch(error) {
+                console.error("Gemini API error:", error);
+                elements.messageDisplay.textContent = "Помилка генерації. Спробуй ще раз.";
+            } finally {
+                elements.geminiGenerateButton.disabled = false;
+                elements.geminiGenerateButton.textContent = "✨ Згенерувати Ритм";
+            }
+        }
+
+        elements.playButton.addEventListener('click', () => {
+            if (audioContext.state === 'suspended') {
+                 audioContext.resume().then(() => { if(!gameActive && soundsReady) startGame(); });
+            } else {
+                if(!gameActive && soundsReady) startGame();
+            }
+        });
+        
+        elements.geminiGenerateButton.addEventListener('click', generateAIRhythm);
+
+        Object.values(drumPads).forEach(pad => {
+            pad.addEventListener('click', () => handleKeyPress(pad.dataset.drum));
+        });
+        
+        window.addEventListener('keydown', (e) => {
+            const keyMap = { 'd': 'kick', 'f': 'snare', 'j': 'hi-hat', 'k': 'tom' };
+            const drumToPlay = keyMap[e.key.toLowerCase()];
+            if (drumToPlay) handleKeyPress(drumToPlay);
+        });
+
+        elements.speedControls.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (gameActive) return;
+                elements.speedControls.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFallSpeed = NOTE_FALL_SPEEDS[btn.dataset.speed];
+            });
+        });
+
+        elements.geminiGenerateButton.disabled = true;
+        loadAllSounds();
+    </script>
+</body>
+</html>
+
