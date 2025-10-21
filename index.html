@@ -317,7 +317,7 @@
         let score = 0, gameActive = false, soundsReady = false, timeLeft = 60;
         let gameTimer, rhythmInterval;
         let currentRhythm = [], currentStyleName = '', currentDifficultyName = 'Середнє';
-        const NOTE_FALL_SPEEDS = { easy: 2000, normal: 1600, hard: 1200 }; // Slower speeds
+        const NOTE_FALL_SPEEDS = { easy: 3000, normal: 2500, hard: 2000 };
         let currentFallSpeed = NOTE_FALL_SPEEDS.normal;
         const HIT_ZONE_OFFSET = 50;
         let notesOnScreen = [];
@@ -501,18 +501,26 @@
         function animatePad(drumName, result) {
             const pad = drumPads[drumName];
             if (!pad) return;
-            
-            pad.classList.add('playing');
-            if (result) pad.className = `drum-pad playing ${result}`;
-            
+
+            const baseClass = originalPadClasses[drumName];
+            pad.className = `${baseClass} playing`; // Start with base + playing
+
+            if (result) {
+                pad.classList.add(result); // Add 'hit-correct' or 'hit-miss'
+            }
+
             setTimeout(() => {
-                 pad.className = originalPadClasses[drumName];
+                pad.className = baseClass; // Reset to original
             }, 200);
         }
 
         function handleKeyPress(drumName) {
             playSound(drumName);
-            if (!gameActive) return;
+
+            if (!gameActive) {
+                animatePad(drumName); // Provide feedback even when game isn't active
+                return;
+            }
 
             let hitRegistered = false;
             const hitLineY = elements.drumPadContainer.getBoundingClientRect().top;
@@ -528,15 +536,17 @@
                         elements.scoreDisplay.textContent = score;
                         note.hasBeenHit = true;
                         note.element.classList.add('hit');
-                        animatePad(drumName, 'hit-correct');
                         hitRegistered = true;
-                        break;
+                        break; 
                     }
                 }
             }
             
-            if (!hitRegistered) animatePad(drumName, 'hit-miss');
-            else animatePad(drumName);
+            if (hitRegistered) {
+                animatePad(drumName, 'hit-correct');
+            } else {
+                animatePad(drumName, 'hit-miss');
+            }
         }
 
         function handleMiss(note) {
@@ -587,8 +597,10 @@
             });
             
             window.addEventListener('keydown', (e) => {
-                const keyMap = { 'd': 'kick', 'f': 'snare', 'j': 'hi-hat', 'k': 'tom' };
-                const drumToPlay = keyMap[e.key.toLowerCase()];
+                if (document.activeElement.tagName === 'INPUT') return;
+                
+                const keyMap = { 'KeyD': 'kick', 'KeyF': 'snare', 'KeyJ': 'hi-hat', 'KeyK': 'tom' };
+                const drumToPlay = keyMap[e.code];
                 if (drumToPlay) handleKeyPress(drumToPlay);
             });
         }
@@ -597,6 +609,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
