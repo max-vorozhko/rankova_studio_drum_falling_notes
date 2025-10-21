@@ -168,9 +168,9 @@
                 <div>
                     <p class="text-[0.6rem] font-medium text-slate-500 mb-0.5">Стиль</p>
                     <div id="style-controls" class="flex gap-1">
-                         <button class="control-btn" data-style="rock">Рок №1</button>
-                         <button class="control-btn" data-style="dance">Грув</button>
-                         <button class="control-btn" data-style="break">Брейк</button>
+                         <button class="control-btn" data-style="introGroove">Інтро Грув</button>
+                         <button class="control-btn" data-style="verseGroove">Куплет</button>
+                         <button class="control-btn" data-style="finalBreak">Фінал</button>
                     </div>
                 </div>
                  <div class="h-8 border-l border-slate-200 mx-2"></div>
@@ -259,23 +259,23 @@
         };
 
         const rhythmPatterns = {
-            rock: [
-                { time: 0, drum: 'kick' }, { time: 250, drum: 'hi-hat' }, { time: 500, drum: 'snare' }, { time: 750, drum: 'hi-hat' },
-                { time: 1000, drum: 'kick' }, { time: 1250, drum: 'hi-hat' }, { time: 1500, drum: 'snare' }, { time: 1750, drum: 'hi-hat' },
-                { time: 2000, drum: 'kick' }, { time: 2250, drum: 'hi-hat' }, { time: 2500, drum: 'snare' }, { time: 2750, drum: 'hi-hat' },
-                { time: 3000, drum: 'kick' }, { time: 3250, drum: 'hi-hat' }, { time: 3500, drum: 'snare' }, { time: 3750, drum: 'hi-hat' }
+            introGroove: [
+                { time: 0, drum: 'hi-hat' }, { time: 240, drum: 'kick' }, { time: 480, drum: 'snare' }, { time: 720, drum: 'hi-hat' },
+                { time: 960, drum: 'kick' }, { time: 1200, drum: 'hi-hat' }, { time: 1440, drum: 'snare' }, { time: 1680, drum: 'hi-hat' },
+                { time: 1920, drum: 'hi-hat' }, { time: 2160, drum: 'kick' }, { time: 2400, drum: 'snare' }, { time: 2640, drum: 'hi-hat' },
+                { time: 2880, drum: 'kick' }, { time: 3120, drum: 'hi-hat' }, { time: 3360, drum: 'snare' }, { time: 3600, drum: 'hi-hat' }
             ],
-            dance: [
-                { time: 0, drum: 'kick' }, { time: 250, drum: 'hi-hat' }, { time: 500, drum: 'kick' }, { time: 500, drum: 'snare' }, { time: 750, drum: 'hi-hat' },
-                { time: 1000, drum: 'kick' }, { time: 1250, drum: 'hi-hat' }, { time: 1500, drum: 'kick' }, { time: 1500, drum: 'snare' }, { time: 1750, drum: 'hi-hat' },
-                { time: 2000, drum: 'kick' }, { time: 2250, drum: 'hi-hat' }, { time: 2500, drum: 'kick' }, { time: 2500, drum: 'snare' }, { time: 2750, drum: 'hi-hat' },
-                { time: 3000, drum: 'kick' }, { time: 3250, drum: 'hi-hat' }, { time: 3500, drum: 'kick' }, { time: 3500, drum: 'snare' }, { time: 3750, drum: 'hi-hat' }
+            verseGroove: [
+                { time: 0, drum: 'kick' }, { time: 240, drum: 'hi-hat' }, { time: 480, drum: 'snare' }, { time: 720, drum: 'hi-hat' },
+                { time: 960, drum: 'kick' }, { time: 1200, drum: 'kick' }, { time: 1440, drum: 'snare' }, { time: 1680, drum: 'hi-hat' },
+                { time: 1920, drum: 'kick' }, { time: 2160, drum: 'hi-hat' }, { time: 2400, drum: 'snare' }, { time: 2640, drum: 'hi-hat' },
+                { time: 2880, drum: 'kick' }, { time: 3120, drum: 'kick' }, { time: 3360, drum: 'snare' }, { time: 3600, drum: 'hi-hat' }
             ],
-            break: [
-                { time: 0, drum: 'kick' }, { time: 250, drum: 'kick' }, { time: 500, drum: 'snare' }, { time: 750, drum: 'tom' },
-                { time: 1000, drum: 'tom' }, { time: 1250, drum: 'snare' }, { time: 1500, drum: 'kick' }, { time: 1750, drum: 'hi-hat' },
-                { time: 2000, drum: 'kick' }, { time: 2250, drum: 'tom' }, { time: 2500, drum: 'snare' }, { time: 2750, drum: 'snare' },
-                { time: 3000, drum: 'kick' }, { time: 3250, drum: 'hi-hat' }, { time: 3500, drum: 'tom' }, { time: 3750, drum: 'snare' }
+            finalBreak: [
+                { time: 0, drum: 'kick' }, { time: 240, drum: 'hi-hat' }, { time: 480, drum: 'snare' }, { time: 720, drum: 'hi-hat' },
+                { time: 960, drum: 'kick' }, { time: 1200, drum: 'snare' }, { time: 1440, drum: 'tom' }, { time: 1680, drum: 'tom' },
+                { time: 1920, drum: 'snare' }, { time: 2160, drum: 'tom' }, { time: 2400, drum: 'snare' }, { time: 2640, drum: 'tom' },
+                { time: 2880, drum: 'snare' }, { time: 3120, drum: 'tom' }, { time: 3360, drum: 'snare' }, { time: 3600, drum: 'kick' }
             ]
         };
 
@@ -406,10 +406,10 @@
             }, 1000);
             
             let beatIndex = 0;
-            const beatInterval = 250; 
+            const beatInterval = 240; // 125 BPM (60000ms / 125bpm / 2 eighth notes = 240ms)
             rhythmInterval = setInterval(() => {
                  if (!gameActive) return;
-                 const patternTime = (beatIndex * beatInterval) % 4000; 
+                 const patternTime = (beatIndex * beatInterval) % 3840; // 2 measures * 8 eighth notes * 240ms
                  const hits = currentRhythm.filter(note => note.time === patternTime);
                  hits.forEach(hit => spawnNote(hit.drum));
                  beatIndex++;
