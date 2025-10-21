@@ -34,7 +34,7 @@
         }
         .game-area {
             position: relative;
-            height: 250px;
+            height: 320px; /* Increased height */
         }
         .lane-container {
             display: flex;
@@ -112,7 +112,9 @@
 
         .pro-button {
             transition: all 0.2s ease-in-out; border-radius: 8px;
-            padding: 8px 12px; font-weight: 600; cursor: pointer;
+            padding: 6px 10px; /* Smaller padding */
+            font-size: 0.875rem; /* Smaller font */
+            font-weight: 600; cursor: pointer;
             background-color: #ffd200; color: #1e293b; border: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -120,9 +122,10 @@
         .pro-button:disabled { opacity: 0.6; cursor: not-allowed; }
         
         .control-btn {
-            padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+            padding: 4px 8px; /* Smaller padding */
+            border-radius: 6px; border: 1px solid #cbd5e1;
             color: #475569; background-color: #f1f5f9; font-weight: 500;
-            transition: all 0.2s ease; cursor: pointer; font-size: 0.75rem;
+            transition: all 0.2s ease; cursor: pointer; font-size: 0.7rem; /* Smaller font */
         }
         .control-btn.active { background-color: #ffd200; color: #1e293b; border-color: #ffd200; }
         .control-btn:not(.active):hover { background-color: #e2e8f0; }
@@ -141,42 +144,42 @@
     <div class="game-container">
         <!-- Game View -->
         <div id="game-view" class="main-view">
-            <div class="flex justify-between items-center mb-2">
-                 <img src="https://github.com/max-vorozhko/rankova_studio_drum/blob/main/Rankova%20logo.png?raw=true" alt="Логотип" class="h-10">
-                 <h1 class="text-md font-bold text-slate-800 text-right">Драм Тренажер</h1>
+            <div class="flex justify-between items-center mb-1">
+                 <img src="https://github.com/max-vorozhko/rankova_studio_drum/blob/main/Rankova%20logo.png?raw=true" alt="Логотип" class="h-8">
+                 <h1 class="text-sm font-bold text-slate-800 text-right">Драм Тренажер</h1>
             </div>
             
-            <div class="flex justify-between items-center bg-slate-100 rounded-lg p-2 mb-2">
+            <div class="flex justify-between items-center bg-slate-100 rounded-lg p-1.5 mb-1">
                 <div class="text-left">
                     <p class="text-xs font-medium text-slate-500">РАХУНОК</p>
-                    <p id="score" class="text-xl font-bold" style="color: #eab308;">0</p>
+                    <p id="score" class="text-lg font-bold" style="color: #eab308;">0</p>
                 </div>
                 <div class="text-center">
                     <p class="text-xs font-medium text-slate-500">ЧАС</p>
-                    <p id="timer" class="text-xl font-bold text-slate-700">01:00</p>
+                    <p id="timer" class="text-lg font-bold text-slate-700">01:00</p>
                 </div>
                 <button id="start-button" class="pro-button" disabled>Почати</button>
             </div>
             
-            <div class="bg-slate-50 rounded-lg p-2 space-y-2 mb-2">
-                <p class="text-xs font-medium text-slate-500 text-center">Обери стиль</p>
-                <div id="style-controls" class="flex flex-wrap justify-center gap-2">
+            <div class="bg-slate-50 rounded-lg p-1.5 space-y-1 mb-1">
+                <p class="text-xs font-medium text-slate-500 text-center">Стиль</p>
+                <div id="style-controls" class="flex flex-wrap justify-center gap-1">
                      <button class="control-btn" data-style="rock">Рок-біт №1</button>
                      <button class="control-btn" data-style="dance">Танцювальний Грув</button>
                      <button class="control-btn" data-style="break">Простий Брейк</button>
                 </div>
             </div>
 
-            <div class="bg-slate-100 rounded-lg p-2 mb-2">
-                 <p class="text-xs font-medium text-slate-500 text-center mb-1">Обери складність</p>
-                <div id="difficulty-controls" class="flex justify-center gap-x-2">
+            <div class="bg-slate-100 rounded-lg p-1.5 mb-1">
+                 <p class="text-xs font-medium text-slate-500 text-center">Складність</p>
+                <div id="difficulty-controls" class="flex justify-center gap-x-1">
                     <button class="control-btn" data-difficulty="easy">Легко</button>
                     <button class="control-btn active" data-difficulty="normal">Середнє</button>
                     <button class="control-btn" data-difficulty="hard">Складно</button>
                 </div>
             </div>
 
-            <p id="message" class="h-5 mb-1 text-center text-sm font-semibold text-slate-600">Завантаження...</p>
+            <p id="message" class="h-5 mb-1 text-center text-xs font-semibold text-slate-600">Завантаження...</p>
 
             <div class="game-area">
                 <div class="lane-container">
@@ -314,7 +317,7 @@
         let score = 0, gameActive = false, soundsReady = false, timeLeft = 60;
         let gameTimer, rhythmInterval;
         let currentRhythm = [], currentStyleName = '', currentDifficultyName = 'Середнє';
-        const NOTE_FALL_SPEEDS = { easy: 1200, normal: 900, hard: 700 };
+        const NOTE_FALL_SPEEDS = { easy: 2000, normal: 1600, hard: 1200 }; // Slower speeds
         let currentFallSpeed = NOTE_FALL_SPEEDS.normal;
         const HIT_ZONE_OFFSET = 50;
         let notesOnScreen = [];
@@ -452,8 +455,8 @@
                      elements.leaderboardList.innerHTML = '<p class="text-center p-4">Ще немає рекордів. Будь першим!</p>';
                      return;
                 }
-                let rank = 1; // FIX: Initialize a counter
-                snapshot.forEach((doc) => { // FIX: Remove index, it's not provided
+                let rank = 1; 
+                snapshot.forEach((doc) => { 
                     const data = doc.data();
                     const entry = document.createElement('div');
                     entry.className = 'flex justify-between p-2 rounded-md';
@@ -466,7 +469,7 @@
                         <span class="font-bold text-slate-800">${data.score}</span>
                     `;
                     elements.leaderboardList.appendChild(entry);
-                    rank++; // FIX: Increment the counter
+                    rank++; 
                 });
             }, (error) => {
                  console.error("Leaderboard fetch error:", error);
@@ -594,4 +597,6 @@
     </script>
 </body>
 </html>
+
+
 
