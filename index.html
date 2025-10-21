@@ -34,7 +34,7 @@
         }
         .game-area {
             position: relative;
-            height: 320px; /* Increased height */
+            height: 390px; /* Maximized height */
         }
         .lane-container {
             display: flex;
@@ -112,8 +112,8 @@
 
         .pro-button {
             transition: all 0.2s ease-in-out; border-radius: 8px;
-            padding: 6px 10px; /* Smaller padding */
-            font-size: 0.875rem; /* Smaller font */
+            padding: 6px 10px;
+            font-size: 0.875rem;
             font-weight: 600; cursor: pointer;
             background-color: #ffd200; color: #1e293b; border: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -122,10 +122,12 @@
         .pro-button:disabled { opacity: 0.6; cursor: not-allowed; }
         
         .control-btn {
-            padding: 4px 8px; /* Smaller padding */
+            padding: 3px 6px; /* Even smaller padding */
             border-radius: 6px; border: 1px solid #cbd5e1;
             color: #475569; background-color: #f1f5f9; font-weight: 500;
-            transition: all 0.2s ease; cursor: pointer; font-size: 0.7rem; /* Smaller font */
+            transition: all 0.2s ease; cursor: pointer; 
+            font-size: 0.65rem; /* Even smaller font */
+            white-space: nowrap;
         }
         .control-btn.active { background-color: #ffd200; color: #1e293b; border-color: #ffd200; }
         .control-btn:not(.active):hover { background-color: #e2e8f0; }
@@ -141,6 +143,7 @@
     </style>
 </head>
 <body>
+    <audio id="background-music" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/main/background.mp3" loop autoplay></audio>
     <div class="game-container">
         <!-- Game View -->
         <div id="game-view" class="main-view">
@@ -149,33 +152,35 @@
                  <h1 class="text-sm font-bold text-slate-800 text-right">Драм Тренажер</h1>
             </div>
             
-            <div class="flex justify-between items-center bg-slate-100 rounded-lg p-1.5 mb-1">
-                <div class="text-left">
-                    <p class="text-xs font-medium text-slate-500">РАХУНОК</p>
-                    <p id="score" class="text-lg font-bold" style="color: #eab308;">0</p>
+            <div class="flex justify-between items-center bg-slate-100 rounded-lg p-1 mb-1">
+                <div class="text-left px-1">
+                    <p class="text-xs font-medium text-slate-500" style="font-size: 0.6rem;">РАХУНОК</p>
+                    <p id="score" class="text-sm font-bold" style="color: #eab308;">0</p>
                 </div>
-                <div class="text-center">
-                    <p class="text-xs font-medium text-slate-500">ЧАС</p>
-                    <p id="timer" class="text-lg font-bold text-slate-700">01:00</p>
+                <div class="text-center px-1">
+                    <p class="text-xs font-medium text-slate-500" style="font-size: 0.6rem;">ЧАС</p>
+                    <p id="timer" class="text-sm font-bold text-slate-700">01:00</p>
                 </div>
                 <button id="start-button" class="pro-button" disabled>Почати</button>
             </div>
             
-            <div class="bg-slate-50 rounded-lg p-1.5 space-y-1 mb-1">
-                <p class="text-xs font-medium text-slate-500 text-center">Стиль</p>
-                <div id="style-controls" class="flex flex-wrap justify-center gap-1">
-                     <button class="control-btn" data-style="rock">Рок-біт №1</button>
-                     <button class="control-btn" data-style="dance">Танцювальний Грув</button>
-                     <button class="control-btn" data-style="break">Простий Брейк</button>
+            <div class="flex items-center justify-between bg-slate-50 rounded-lg p-1 mb-1 text-center">
+                <div>
+                    <p class="text-[0.6rem] font-medium text-slate-500 mb-0.5">Стиль</p>
+                    <div id="style-controls" class="flex gap-1">
+                         <button class="control-btn" data-style="rock">Рок №1</button>
+                         <button class="control-btn" data-style="dance">Грув</button>
+                         <button class="control-btn" data-style="break">Брейк</button>
+                    </div>
                 </div>
-            </div>
-
-            <div class="bg-slate-100 rounded-lg p-1.5 mb-1">
-                 <p class="text-xs font-medium text-slate-500 text-center">Складність</p>
-                <div id="difficulty-controls" class="flex justify-center gap-x-1">
-                    <button class="control-btn" data-difficulty="easy">Легко</button>
-                    <button class="control-btn active" data-difficulty="normal">Середнє</button>
-                    <button class="control-btn" data-difficulty="hard">Складно</button>
+                 <div class="h-8 border-l border-slate-200 mx-2"></div>
+                <div>
+                     <p class="text-[0.6rem] font-medium text-slate-500 mb-0.5">Складність</p>
+                    <div id="difficulty-controls" class="flex gap-x-1">
+                        <button class="control-btn" data-difficulty="easy">Легко</button>
+                        <button class="control-btn active" data-difficulty="normal">Середнє</button>
+                        <button class="control-btn" data-difficulty="hard">Складно</button>
+                    </div>
                 </div>
             </div>
 
@@ -293,6 +298,7 @@
             cancelSaveBtn: document.getElementById('cancel-save-btn'),
             laneContainer: document.querySelector('.lane-container'),
             drumPadContainer: document.getElementById('drum-pad-container'),
+            backgroundMusic: document.getElementById('background-music'),
         };
         
         const drumPads = {
@@ -317,7 +323,7 @@
         let score = 0, gameActive = false, soundsReady = false, timeLeft = 60;
         let gameTimer, rhythmInterval;
         let currentRhythm = [], currentStyleName = '', currentDifficultyName = 'Середнє';
-        const NOTE_FALL_SPEEDS = { easy: 3000, normal: 2500, hard: 2000 };
+        const NOTE_FALL_SPEEDS = { easy: 4500, normal: 3800, hard: 3000 };
         let currentFallSpeed = NOTE_FALL_SPEEDS.normal;
         const HIT_ZONE_OFFSET = 50;
         let notesOnScreen = [];
@@ -352,11 +358,13 @@
         async function init() {
             try {
                 await signInAnonymously(auth);
-            } catch (error) {
+            } catch (error)
+ {
                 console.error("Anonymous sign-in failed:", error);
                 elements.leaderboardBtn.disabled = true;
                 elements.messageDisplay.textContent = 'Помилка таблиці лідерів.';
             }
+            elements.backgroundMusic.volume = 0.3;
             await loadAllSounds();
             setupEventListeners();
         }
@@ -369,6 +377,15 @@
 
         function startGame() {
             if (!soundsReady || currentRhythm.length === 0) return;
+            
+            const playPromise = elements.backgroundMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.error("Помилка відтворення фонової музики:", error);
+                });
+            }
+            elements.backgroundMusic.currentTime = 0;
+
             score = 0;
             elements.scoreDisplay.textContent = score;
             gameActive = true;
@@ -400,6 +417,7 @@
         }
 
         function endGame(timedOut = false) {
+            elements.backgroundMusic.pause();
             gameActive = false;
             clearInterval(gameTimer);
             clearInterval(rhythmInterval);
@@ -414,6 +432,7 @@
         }
         
         function resetGame() {
+            elements.backgroundMusic.pause();
             elements.saveScoreModal.classList.remove('visible');
             score = 0;
             elements.scoreDisplay.textContent = 0;
@@ -609,8 +628,4 @@
     </script>
 </body>
 </html>
-
-
-
-
 
