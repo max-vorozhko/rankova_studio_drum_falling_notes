@@ -61,7 +61,7 @@
             width: 40px;
             height: 20px;
             border-radius: 10px;
-            left: calc(50% - 20px); /* Always center */
+            left: calc(50% - 20px);
             transition: transform linear; /* Removed left transition */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
@@ -157,7 +157,10 @@
                     <p class="text-xs font-medium text-slate-500" style="font-size: 0.6rem;">ЧАС</p>
                     <p id="timer" class="text-sm font-bold text-slate-700">00:00</p>
                 </div>
-                <button id="start-button" class="pro-button" disabled>Почати</button>
+                <div class="flex items-center gap-x-1">
+                    <button id="start-button" class="pro-button" disabled>Почати</button>
+                    <button id="restart-button" class="pro-button" style="background-color:#f1f5f9; color:#475569;" disabled>Рестарт</button>
+                </div>
             </div>
             
             <div class="flex items-center justify-center bg-slate-50 rounded-lg p-1 mb-1 text-center">
@@ -242,23 +245,23 @@
                 { time: 0, drum: 'kick' }, { time: 600, drum: 'snare' }, 
                 { time: 1080, drum: 'kick' }, { time: 1320, drum: 'kick' }, { time: 1680, drum: 'snare' }, 
                 { time: 2160, drum: 'kick' }, { time: 2760, drum: 'snare' }, 
-                { time: 3240, drum: 'kick' }, { time: 3480, drum: 'kick' }, { time: 3840, drum: 'snare' }, // Corrected
+                { time: 3240, drum: 'kick' }, { time: 3480, drum: 'kick' }, { time: 3840, drum: 'snare' }, 
                 { time: 4320, drum: 'kick' }, { time: 4920, drum: 'snare' }, 
-                { time: 5400, drum: 'kick' }, { time: 5640, drum: 'kick' }, { time: 6000, drum: 'snare' }, // Corrected
+                { time: 5400, drum: 'kick' }, { time: 5640, drum: 'kick' }, { time: 6000, drum: 'snare' }, 
                 { time: 6600, drum: 'kick' }, { time: 7080, drum: 'snare' }, 
-                { time: 7560, drum: 'kick' }, { time: 7800, drum: 'kick' }, { time: 8160, drum: 'snare' }, // Corrected
+                { time: 7560, drum: 'kick' }, { time: 7800, drum: 'kick' }, { time: 8160, drum: 'snare' }, 
                 { time: 8640, drum: 'kick' }, { time: 9240, drum: 'snare' }, 
                 { time: 9720, drum: 'kick' }, { time: 9960, drum: 'kick' }, { time: 10320, drum: 'snare' }, 
                 { time: 10800, drum: 'kick' }, { time: 11400, drum: 'snare' }, 
                 { time: 11880, drum: 'kick' }, { time: 12120, drum: 'kick' }, { time: 12480, drum: 'snare' }, 
                 { time: 12960, drum: 'kick' }, { time: 13560, drum: 'snare' }, 
-                { time: 14040, drum: 'kick' }, { time: 14280, drum: 'kick' }, { time: 14640, drum: 'snare' }, // Corrected
+                { time: 14040, drum: 'kick' }, { time: 14280, drum: 'kick' }, { time: 14640, drum: 'snare' }, 
                 { time: 15120, drum: 'kick' }, { time: 15720, drum: 'snare' }, 
                 { time: 16200, drum: 'kick' }, { time: 16440, drum: 'kick' }, { time: 16800, drum: 'snare' }, 
                 { time: 17280, drum: 'kick' }, { time: 17880, drum: 'snare' }, 
                 { time: 18360, drum: 'kick' }, { time: 18600, drum: 'kick' }, { time: 18960, drum: 'snare' }, 
                 { time: 19440, drum: 'kick' }, { time: 20040, drum: 'snare' }, 
-                { time: 20520, drum: 'kick' }, { time: 20760, drum: 'kick' }, { time: 21120, drum: 'snare' }, // Corrected
+                { time: 20520, drum: 'kick' }, { time: 20760, drum: 'kick' }, { time: 21120, drum: 'snare' }, 
                 { time: 21600, drum: 'kick' }, { time: 22200, drum: 'snare' }, 
                 { time: 22680, drum: 'kick' }, { time: 22920, drum: 'kick' }, { time: 23280, drum: 'snare' }, 
                 { time: 23760, drum: 'kick' }, { time: 24360, drum: 'snare' }, 
@@ -272,7 +275,7 @@
                 { time: 32400, drum: 'kick' }, { time: 33000, drum: 'snare' }, 
                 { time: 33480, drum: 'kick' }, { time: 33720, drum: 'kick' }, { time: 34080, drum: 'snare' }, 
                 { time: 34560, drum: 'kick' }, { time: 35160, drum: 'snare' }, 
-                { time: 35640, drum: 'kick' }, { time: 35880, drum: 'kick' }, { time: 36240, drum: 'snare' }, // Corrected
+                { time: 35640, drum: 'kick' }, { time: 35880, drum: 'kick' }, { time: 36240, drum: 'snare' }, 
                 { time: 36720, drum: 'kick' }, { time: 37320, drum: 'snare' }, 
                 { time: 37800, drum: 'kick' }, { time: 38040, drum: 'kick' }, { time: 38400, drum: 'snare' }, 
                 { time: 38880, drum: 'kick' }, { time: 39480, drum: 'snare' }, 
@@ -300,6 +303,7 @@
             laneContainer: document.querySelector('.lane-container'),
             drumPadContainer: document.getElementById('drum-pad-container'),
             backgroundMusic: document.getElementById('backgroundMusic'),
+            restartButton: document.getElementById('restart-button'), // Додано
         };
         
         const drumPads = {
@@ -320,7 +324,7 @@
         let score = 0, gameActive = false, soundsReady = false, timeLeft = 0;
         let gameTimer;
         let rhythmTimeouts = [];
-        let currentRhythm = [];
+        let processedRhythm = []; // Will be populated by preprocessRhythm
         let trackDuration = 0;
         const currentFallSpeed = 3800; // Fixed fall speed
         const HIT_ZONE_OFFSET = 50;
@@ -359,6 +363,10 @@
             source.connect(audioContext.destination);
             source.start(0);
         }
+        
+        /* * ВИДАЛЕНО функцію preprocessRhythm(rhythm)
+         * Тепер ноти не будуть аналізуватися на "каскадність"
+         */
 
         async function init() {
             try {
@@ -370,7 +378,7 @@
             }
             elements.backgroundMusic.volume = 0.3;
             
-            currentRhythm = rhythmPatterns.exercise1; // Set default rhythm
+            processedRhythm = rhythmPatterns.exercise1; // ЗМІНЕНО: Використовуємо ритм напряму
             
             await loadAllSounds();
             setupEventListeners();
@@ -383,8 +391,8 @@
         }
 
         function startGame() {
-            if (!soundsReady || currentRhythm.length === 0) return;
-            
+            if (!soundsReady || processedRhythm.length === 0) return;
+
             elements.backgroundMusic.play().catch(error => {
                 console.log("Автозапуск музики заблоковано. Запуститься після першого натискання.");
             });
@@ -395,6 +403,7 @@
             gameActive = true;
             elements.startButton.disabled = true;
             elements.startButton.textContent = 'Гра триває...';
+            elements.restartButton.disabled = false; // Активувати Рестарт
             elements.messageDisplay.textContent = 'Грай!';
             notesOnScreen.forEach(note => note.element.remove());
             notesOnScreen = [];
@@ -413,9 +422,9 @@
             rhythmTimeouts.forEach(clearTimeout);
             rhythmTimeouts = [];
             
-            currentRhythm.forEach(note => {
+            processedRhythm.forEach(note => {
                 const timeoutId = setTimeout(() => {
-                    if(gameActive) spawnNote(note.drum);
+                    if(gameActive) spawnNote(note.drum); // ЗМІНЕНО: 'note.position' видалено
                 }, note.time);
                 rhythmTimeouts.push(timeoutId);
             });
@@ -430,6 +439,7 @@
             
             elements.startButton.disabled = false;
             elements.startButton.textContent = 'Почати';
+            elements.restartButton.disabled = true; // Деактивувати Рестарт
             
             if (timedOut) {
                 elements.finalScoreDisplay.textContent = score;
@@ -439,14 +449,23 @@
         
         function resetGame() {
             elements.backgroundMusic.pause();
+            elements.backgroundMusic.currentTime = 0; // Скинути музику
+            gameActive = false;
+            clearInterval(gameTimer);
+            rhythmTimeouts.forEach(clearTimeout);
+            rhythmTimeouts = [];
+            notesOnScreen.forEach(note => note.element.remove()); // Очистити ноти
+            notesOnScreen = [];
+
             elements.saveScoreModal.classList.remove('visible');
             score = 0;
             elements.scoreDisplay.textContent = 0;
             timeLeft = trackDuration;
             updateTimerDisplay();
             elements.messageDisplay.textContent = "Готовий? Натисни 'Почати'";
-            rhythmTimeouts.forEach(clearTimeout);
-            rhythmTimeouts = [];
+            
+            elements.startButton.disabled = false; // Переконатися, що кнопка "Почати" активна
+            elements.restartButton.disabled = true; // Переконатися, що кнопка "Рестарт" неактивна
         }
         
         async function saveScore() {
@@ -503,12 +522,17 @@
             });
         }
         
-        function spawnNote(drumName) {
+        function spawnNote(drumName) { // ЗМІНЕНО: 'position' видалено
             const laneElement = drumLanes[drumName];
             if(!laneElement) return;
 
             const noteElement = document.createElement('div');
             noteElement.className = `note ${drumName}`;
+
+            /* * ВИДАЛЕНО блок switch(position)
+             * Нота тепер завжди з'являється по центру, як вказано в CSS
+             */
+            
             laneElement.appendChild(noteElement);
 
             const note = { element: noteElement, drum: drumName, hasBeenHit: false };
@@ -629,6 +653,8 @@
                     if(!gameActive && soundsReady) startGame();
                 }
             });
+            
+            elements.restartButton.addEventListener('click', resetGame); 
 
             elements.leaderboardBtn.addEventListener('click', showLeaderboard);
             elements.backToGameBtn.addEventListener('click', () => {
@@ -655,4 +681,5 @@
     </script>
 </body>
 </html>
+
 
