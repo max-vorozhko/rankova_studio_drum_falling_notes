@@ -580,8 +580,9 @@
         });
 
         const GAME_DURATION_SECONDS_MAP = {
+            // Встановлюємо максимальну очікувану тривалість. Фактична буде взята з аудіо.
             'exercise1': 47,
-            'exercise2': 20, // Тривалість 20 сек
+            'exercise2': 20, 
         };
         
         // **********************************************
@@ -699,15 +700,17 @@
                 soundsReady = true;
                 
                 // 2. Ініціалізація HTML Audio елементів (вони завантажуються ледачо)
-                // Ми не чекаємо їх тут, але перевіряємо їх перед початком гри
                 
                 // 3. Спроба встановити тривалість для відображення таймера
-                if (elements.backgroundMusic1.readyState >= 3) {
-                     GAME_DURATION_SECONDS_MAP['exercise1'] = elements.backgroundMusic1.duration || 47;
-                }
-                 if (elements.backgroundMusic2.readyState >= 3) {
-                     GAME_DURATION_SECONDS_MAP['exercise2'] = elements.backgroundMusic2.duration || 20;
-                }
+                // Це не буде блокувати активацію кнопок, але оновимо trivalist.
+                elements.backgroundMusic1.addEventListener('loadedmetadata', () => {
+                    if(elements.backgroundMusic1.duration) GAME_DURATION_SECONDS_MAP['exercise1'] = elements.backgroundMusic1.duration;
+                    if(currentExercise === 'exercise1') setCurrentExercise('exercise1');
+                });
+                elements.backgroundMusic2.addEventListener('loadedmetadata', () => {
+                    if(elements.backgroundMusic2.duration) GAME_DURATION_SECONDS_MAP['exercise2'] = elements.backgroundMusic2.duration;
+                    if(currentExercise === 'exercise2') setCurrentExercise('exercise2');
+                });
                 
                 setButtonsState(false, "Готовий? Натисни 'Почати'");
                 
@@ -925,6 +928,22 @@
                  currentBGM.load(); // Примусове завантаження
                  return;
             }
+            
+            // **********************************************
+            // * ВИПРАВЛЕННЯ БАГУ ТРИВАЛОСТІ: ВИКОРИСТОВУЄМО АУДІО onended *
+            // **********************************************
+            // 1. Встановлюємо тривалість гри на основі фактичної тривалості треку
+            if (currentBGM.duration && !isNaN(currentBGM.duration)) {
+                 trackDuration = Math.ceil(currentBGM.duration);
+                 timeLeft = trackDuration;
+                 updateTimerDisplay();
+                 
+                 // 2. Встановлюємо слухача на завершення треку
+                 currentBGM.onended = () => {
+                     endGame(true); // Завершуємо гру, коли музика закінчилася
+                 };
+            }
+            // **********************************************
 
             // Reset demo mode flag
             isDemoMode = false;
@@ -952,17 +971,14 @@
             notesOnScreen.forEach(note => note.element.remove());
             notesOnScreen = [];
             
-            timeLeft = trackDuration;
-            updateTimerDisplay();
             
             startBeatIndicator(); 
 
             gameTimer = setInterval(() => {
-                timeLeft--;
+                // Використовуємо timeLeft лише для відображення, а не для завершення гри
+                if (timeLeft > 0) timeLeft--;
                 updateTimerDisplay();
-                if (timeLeft <= 0) {
-                    endGame(true); 
-                }
+                // Гра завершиться через onended
             }, 1000);
             
             rhythmTimeouts.forEach(clearTimeout);
@@ -985,17 +1001,9 @@
                 flashPadAtTime(note.drum, idealHitTimeMs); 
             });
             
-            // Додатковий таймаут для завершення гри
-            // Використовуємо останній ЧАС СПАВНУ + повний час анімації.
-            const lastSpawnTime = processedRhythm[processedRhythm.length - 1].time;
-            
-            if ((lastSpawnTime + ANIMATION_DURATION_MS) / 1000 < GAME_DURATION_SECONDS_MAP[currentExercise]) {
-                setTimeout(() => {
-                    if (gameActive && timeLeft > 0) {
-                        endGame(true); 
-                    }
-                }, lastSpawnTime + ANIMATION_DURATION_MS + 500); 
-            }
+            // **********************************************
+            // * ВИДАЛЕНО: Видаляємо таймаут для завершення гри *
+            // **********************************************
         }
         
         function startDemoMode() {
@@ -1011,6 +1019,16 @@
                  currentBGM.load(); // Примусове завантаження
                  return;
             }
+            
+            // **********************************************
+            // * ВИПРАВЛЕННЯ ДЕМО: ВИКОРИСТОВУЄМО АУДІО onended *
+            // **********************************************
+            if (currentBGM.duration && !isNaN(currentBGM.duration)) {
+                 currentBGM.onended = () => {
+                     endDemoMode(); // Завершуємо Демо, коли музика закінчилася
+                 };
+            }
+            // **********************************************
 
             // Скидаємо гру на випадок, якщо вона була активна
             resetGame(); 
@@ -1089,18 +1107,14 @@
 
             });
 
-             // Додатковий таймаут для завершення ДЕМО
-            const lastSpawnTime = demoRhythm[demoRhythm.length - 1].time;
-            
-            setTimeout(() => {
-                if (isDemoMode) {
-                    endDemoMode(); 
-                }
-            }, lastSpawnTime + ANIMATION_DURATION_MS + 500); // Закінчуємо після останньої ноти
+             // **********************************************
+             // * ВИДАЛЕНО: Видаляємо таймаут для завершення ДЕМО *
+             // **********************************************
         }
         
         function endDemoMode() {
              currentBGM.pause();
+             currentBGM.onended = null; // Видаляємо слухача
              isDemoMode = false;
              clearInterval(gameTimer);
              clearTimeout(beatTimer);
@@ -1124,6 +1138,7 @@
 
         function endGame(timedOut = false) {
             currentBGM.pause();
+            currentBGM.onended = null; // Видаляємо слухача
             gameActive = false;
             clearInterval(gameTimer);
             clearTimeout(beatTimer);
@@ -1147,6 +1162,7 @@
             if (currentBGM) {
                 currentBGM.pause();
                 currentBGM.currentTime = 0;
+                currentBGM.onended = null; // Видаляємо слухача
             }
             gameActive = false;
             isDemoMode = false; // Reset demo mode
