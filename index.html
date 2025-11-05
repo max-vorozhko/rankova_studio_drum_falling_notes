@@ -28,8 +28,6 @@
  20px rgba(0, 0, 0, 0.1);
             padding: 12px;
             position: relative;
-            /* ВИПРАВЛЕННЯ: ЗАПОБІГАННЯ ЗУМУ */
-            touch-action: manipulation;
         }
         .main-view {
              transition: opacity 0.3s ease;
@@ -74,17 +72,28 @@
         /* ********************************************** */
         /* * ВІЗУАЛІЗАЦІЯ ЗОНИ ВЛУЧАННЯ (HIT ZONE) * */
         /* ********************************************** */
-        
-        /* СИНЯ ЛІНІЯ: Візуалізація фактичної точки спрацювання */
-        #ideal-hit-line {
+        #hit-zone-visual {
             position: absolute;
+            top: 260px; 
+            height: 100px; 
+            left: 0;
+            right: 0;
+            background-color: rgba(34, 197, 94, 0.15); /* Напівпрозорий зелений */
+            pointer-events: none;
+            z-index: 5;
+            border-top: 1px dashed rgba(34, 197, 94, 0.8); 
+            border-bottom: 1px dashed rgba(34, 197, 94, 0.8);
+        }
+
+        #hit-zone-visual::after {
+            content: '';
+            position: absolute;
+            top: 50%; 
             left: 0;
             right: 0;
             height: 2px;
-            background-color: #3b82f6; /* Синій колір */
-            box-shadow: 0 0 5px #3b82f6;
-            z-index: 6; 
-            pointer-events: none;
+            background-color: rgba(34, 197, 94, 0.9); 
+            transform: translateY(-50%);
         }
         /* ********************************************** */
         
@@ -120,7 +129,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 85px; /* Збільшено з 80px */
+            height: 80px;
             border-top: 4px solid #ffd200;
             box-shadow: 0 -5px 15px rgba(255, 210, 0, 0.2);
             display: flex;
@@ -129,12 +138,10 @@
             padding: 5px;
             background-color: #ffffff;
             z-index: 10; /* Барабани поверх зони влучання */
-            /* ВИПРАВЛЕННЯ: ЗАПОБІГАННЯ ЗУМУ */
-            touch-action: manipulation; 
         }
         .drum-pad {
-            width: 64px; /* Збільшено з 60px */
-            height: 64px; /* Збільшено з 60px */
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -144,8 +151,6 @@
             transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out, box-shadow 0.1s ease;
             color: white;
             font-weight: 700;
-            /* ВИПРАВЛЕННЯ: ЗАПОБІГАННЯ ЗУМУ */
-            touch-action: manipulation; 
         }
         .drum-pad .drum-name { font-size: 0.7rem; }
         .drum-pad .key-hint { font-size: 0.6rem; opacity: 0.7; }
@@ -163,7 +168,7 @@
             font-size: 0.875rem;
             font-weight: 600; cursor: pointer;
             background-color: #ffd200; color: #1e293b; border: none;
-            box-shadow: 0 4px rgba(0,0,0,0.1);
+            box-shadow: 0 0 4px rgba(0,0,0,0.1);
         }
         .pro-button:hover:not(:disabled) { background-color: #e6be00; }
         .pro-button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -207,27 +212,11 @@
         .stats-item.hit-missed { color: #b91c1c; font-weight: 500; }
         .stats-item.key-miss { color: #f97316; font-weight: 500; }
         .timing-detail { font-size: 0.75rem; color: #475569; }
-        
-        /* ********************************************** */
-        /* СТИЛІ ДЛЯ ПІДСВІЧУВАННЯ НОТ (CORRECT HIT) */
-        /* ********************************************** */
-        .note.correct-hit {
-            background-color: #22c55e !important; /* Насичений зелений */
-            box-shadow: 0 0 10px #22c55e;
-            opacity: 1;
-            transform: scale(1.2); 
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out, background-color 0.1s ease-out;
-        }
-
 
     </style>
 </head>
 <body>
-    <!-- Трек 1: rnb (Виправлений URL) -->
-    <audio id="backgroundMusic1" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/main/background_rnb.mp3" preload="auto"></audio>
-    <!-- Трек 2: pop (Виправлений URL) -->
-    <audio id="backgroundMusic2" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/2439dfdfec5ffcc9bfca7004ab7bac7f36f7c6e4/background_pop_full.mp3" preload="auto"></audio>
-
+    <audio id="backgroundMusic" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/d4940c6393eebbf3355ad00de4f0e2668c6d56eb/background_rnb.mp3" preload="auto"></audio>
     <div class="game-container">
         <!-- Game View -->
         <div id="game-view" class="main-view">
@@ -247,8 +236,6 @@
                 </div>
                 <div class="flex items-center gap-x-1">
                     <button id="start-button" class="pro-button" disabled>Почати</button>
-                    <!-- NEW DEMO BUTTON -->
-                    <button id="demo-button" class="pro-button" style="background-color:#14b8a6; color:#fff;" disabled>Демо</button> 
                     <button id="restart-button" class="pro-button" style="background-color:#f1f5f9; color:#475569;" disabled>Рестарт</button>
                 </div>
             </div>
@@ -259,21 +246,17 @@
                     <p class="text-[0.6rem] font-medium text-slate-500 mb-0.5">Вправа</p>
                     <div id="style-controls" class="flex gap-1">
                          <button class="control-btn active" data-style="exercise1">Вправа 1</button>
-                         <button class="control-btn" data-style="exercise2">Вправа 2</button>
                     </div>
                 </div>
             </div>
 
             <p id="message" class="h-5 mb-1 text-center text-xs font-semibold text-slate-600">Завантаження...</p>
             
-            <!-- Запасний елемент замість комбо -->
+            <!-- Комбо-множник ВИДАЛЕНО -->
             <div class="h-6 mb-1"></div>
 
             <div class="game-area">
-                <!-- ВИДАЛЕНО #hit-zone-visual -->
-                <!-- NEW IDEAL HIT LINE -->
-                <div id="ideal-hit-line"></div>
-                
+                <div id="hit-zone-visual"></div> <!-- NEW HIT ZONE VISUAL -->
                 <div class="lane-container">
                     <div id="lane-kick" class="lane"></div>
                     <div id="lane-snare" class="lane"></div>
@@ -287,8 +270,6 @@
                 <button id="leaderboard-btn" class="pro-button flex-1" style="background-color:#f1f5f9; color:#475569;">🏆 Таблиця лідерів</button>
                 <a href="https://n813529.alteg.io" target="_blank" class="pro-button flex-1 text-center">Запис на урок</a>
             </div>
-            <!-- Режим розробника -->
-            <button id="record-mode-btn" class="pro-button w-full mt-2 text-sm" style="background-color:#475569; color:#fff;">⚙️ Режим запису ритму</button>
         </div>
 
         <!-- Leaderboard View -->
@@ -322,49 +303,9 @@
                 <div id="stats-content" class="stats-content">
                     <!-- Statistics will be inserted here -->
                 </div>
-                <button id="close-stats-btn" class="pro-button w-full mt-4 text-sm">Закрити</button>
+                <button id="close-stats-btn" class="pro-button w-full mt-4 text-sm">Закрити</mi-button>
             </div>
         </div>
-        
-        <!-- Record Mode Modal -->
-        <div id="record-modal" class="modal-overlay">
-            <div class="bg-white p-6 rounded-xl shadow-lg w-11/12 max-w-md text-center">
-                <h2 class="text-xl font-bold text-slate-800 mb-2">🥁 Режим запису ритму</h2>
-                <p id="record-message" class="text-sm font-semibold text-slate-600 mb-3 h-5">Оберіть трек і натисніть "Почати запис".</p>
-                
-                <div id="analysis-output" class="hidden mt-4 text-left">
-                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 p-3 rounded-lg relative">
-                        <p class="font-bold text-sm mb-1">✨ Аналіз ритму (Gemini AI):</p>
-                        <p class="text-xs">Назва: <span id="analysis-name" class="font-semibold"></span></p>
-                        <p class="text-xs">BPM: <span id="analysis-bpm" class="font-semibold"></span></p>
-                        <p class="text-xs mt-2" id="analysis-description"></p>
-                    </div>
-                </div>
-
-                <div class="bg-slate-100 p-3 rounded-lg mb-4">
-                    <p class="text-xs font-medium text-slate-500 mb-1">Обрати трек для запису:</p>
-                    <div id="record-track-controls" class="flex gap-2 justify-center">
-                         <button class="control-btn record-track-btn active" data-track-id="backgroundMusic1" data-style="exercise1">Трек 1</button>
-                         <button class="control-btn record-track-btn" data-track-id="backgroundMusic2" data-style="exercise2">Трек 2</button>
-                    </div>
-                </div>
-
-                <div id="record-controls-container" class="flex gap-x-2">
-                    <button id="record-start-btn" class="pro-button flex-1 text-sm">Почати запис</button>
-                    <button id="record-stop-btn" class="pro-button flex-1 text-sm" disabled style="background-color:#ef4444; color:#fff;">Стоп</button>
-                </div>
-                
-                <!-- Контейнер для виводу таймінгів -->
-                <div id="record-result-container" class="mt-4 hidden text-left">
-                    <p class="text-sm font-medium text-slate-800 mb-1">Отриманий ритм (Скопіюйте та вставте в `rhythmPatterns`):</p>
-                    <textarea id="recorded-rhythm-output" rows="10" class="w-full border border-slate-300 rounded-md p-2 text-xs" readonly></textarea>
-                    <button id="analyze-rhythm-btn" class="pro-button w-full mt-2 text-sm" style="background-color:#475569; color:#ffd200;" disabled>✨ Аналізувати ритм (Gemini AI)</button>
-                </div>
-
-                <button id="record-close-btn" class="pro-button w-full mt-4 text-sm" style="background-color:#475569; color:#fff;">Закрити</button>
-            </div>
-        </div>
-
     </div>
 
     <script type="module">
@@ -394,142 +335,56 @@
         };
         
         // **********************************************
-        // * РИТМИ ДЛЯ ВПРАВ *
+        // * ПЕРЕВІРЕНИЙ РОБОЧИЙ РИТМ (42720 мс = 42.72 сек) *
         // **********************************************
         const rhythmPatterns = {
             exercise1: [
-                // ОНОВЛЕНИЙ РИТМ ВПРАВИ 1 З ВАШИМИ ТАЙМКОДАМИ
-                // ПРИМІТКА: Ці таймкоди будуть скориговані в коді, щоб перший удар відбувся одразу.
-                { time: 3577, drum: 'kick' },
-                { time: 4109, drum: 'snare' },
-                { time: 4734, drum: 'kick' },
-                { time: 4990, drum: 'kick' },
-                { time: 5285, drum: 'snare' },
-                { time: 5780, drum: 'kick' },
-                { time: 6314, drum: 'snare' },
-                { time: 6841, drum: 'kick' },
-                { time: 7107, drum: 'kick' },
-                { time: 7402, drum: 'snare' },
-                { time: 7938, drum: 'kick' },
-                { time: 8463, drum: 'snare' },
-                { time: 9027, drum: 'kick' },
-                { time: 9306, drum: 'kick' },
-                { time: 9601, drum: 'snare' },
-                { time: 10136, drum: 'kick' },
-                { time: 10633, drum: 'snare' },
-                { time: 11164, drum: 'kick' },
-                { time: 11432, drum: 'kick' },
-                { time: 11723, drum: 'snare' },
-                { time: 12280, drum: 'kick' },
-                { time: 12799, drum: 'snare' },
-                { time: 13348, drum: 'kick' },
-                { time: 13619, drum: 'kick' },
-                { time: 13902, drum: 'snare' },
-                { time: 14421, drum: 'kick' },
-                { time: 14949, drum: 'snare' },
-                { time: 15506, drum: 'kick' },
-                { time: 15778, drum: 'kick' },
-                { time: 16061, drum: 'snare' },
-                { time: 16570, drum: 'kick' },
-                { time: 17119, drum: 'snare' },
-                { time: 17637, drum: 'kick' },
-                { time: 17922, drum: 'kick' },
-                { time: 18206, drum: 'snare' },
-                { time: 18741, drum: 'kick' },
-                { time: 19283, drum: 'snare' },
-                { time: 19817, drum: 'kick' },
-                { time: 20089, drum: 'kick' },
-                { time: 20384, drum: 'snare' },
-                { time: 20888, drum: 'kick' },
-                { time: 21439, drum: 'snare' },
-                { time: 21986, drum: 'kick' },
-                { time: 22258, drum: 'kick' },
-                { time: 22542, drum: 'snare' },
-                { time: 23060, drum: 'kick' },
-                { time: 23615, drum: 'snare' },
-                { time: 24130, drum: 'kick' },
-                { time: 24409, drum: 'kick' },
-                { time: 24709, drum: 'snare' },
-                { time: 25239, drum: 'kick' },
-                { time: 25802, drum: 'snare' },
-                { time: 26285, drum: 'kick' },
-                { time: 26585, drum: 'kick' },
-                { time: 26875, drum: 'snare' },
-                { time: 27400, drum: 'kick' },
-                { time: 27931, drum: 'snare' },
-                { time: 28463, drum: 'kick' },
-                { time: 28742, drum: 'kick' },
-                { time: 29043, drum: 'snare' },
-                { time: 29551, drum: 'kick' },
-                { time: 30094, drum: 'snare' },
-                { time: 30635, drum: 'kick' },
-                { time: 30923, drum: 'kick' },
-                { time: 31190, drum: 'snare' },
-                { time: 31722, drum: 'kick' },
-                { time: 32270, drum: 'snare' },
-                { time: 32787, drum: 'kick' },
-                { time: 33077, drum: 'kick' },
-                { time: 33358, drum: 'snare' },
-                { time: 33871, drum: 'kick' },
-                { time: 34443, drum: 'snare' },
-                { time: 34951, drum: 'kick' },
-                { time: 35209, drum: 'kick' },
-                { time: 35504, drum: 'snare' },
-                { time: 36018, drum: 'kick' },
-                { time: 36562, drum: 'snare' },
-                { time: 37135, drum: 'kick' },
-                { time: 37408, drum: 'kick' },
-                { time: 37687, drum: 'snare' },
-                { time: 38188, drum: 'kick' },
-                { time: 38732, drum: 'snare' },
-                { time: 39288, drum: 'kick' },
-                { time: 39547, drum: 'kick' },
-                { time: 39831, drum: 'snare' },
-                { time: 40372, drum: 'kick' },
-                { time: 40904, drum: 'snare' },
-                { time: 41426, drum: 'kick' },
-                { time: 41708, drum: 'kick' },
-                { time: 41993, drum: 'snare' },
-                { time: 42538, drum: 'kick' },
-                { time: 43101, drum: 'snare' },
-                { time: 43612, drum: 'kick' },
-                { time: 43874, drum: 'kick' },
-                { time: 44164, drum: 'snare' },
-                { time: 44681, drum: 'kick' },
-                { time: 45239, drum: 'snare' },
-                { time: 45740, drum: 'kick' },
-                { time: 46025, drum: 'kick' },
-                { time: 46304, drum: 'snare' }
-            ],
-            exercise2: [
-                { time: 0, drum: 'kick' }, { time: 480, drum: 'snare' }, 
-                { time: 960, drum: 'kick' }, { time: 1440, drum: 'snare' }, 
-                { time: 1920, drum: 'kick' }, { time: 2160, drum: 'kick' }, { time: 2400, drum: 'snare' }, 
-                { time: 2880, drum: 'kick' }, { time: 3360, drum: 'snare' }, 
-                { time: 3840, drum: 'kick' }, { time: 4080, drum: 'kick' }, { time: 4320, drum: 'snare' }, 
-                { time: 4800, drum: 'kick' }, { time: 5280, drum: 'snare' }, 
-                { time: 5760, drum: 'kick' }, { time: 6240, drum: 'snare' }, 
-                { time: 6720, drum: 'kick' }, { time: 6960, drum: 'kick' }, { time: 7200, drum: 'snare' }, 
-                { time: 7680, drum: 'kick' }, { time: 8160, drum: 'snare' }, 
-                { time: 8640, drum: 'kick' }, { time: 8880, drum: 'kick' }, { time: 9120, drum: 'snare' },
-                { time: 9600, drum: 'kick' }, { time: 10080, drum: 'snare' },
-                { time: 10560, drum: 'kick' }, { time: 11040, drum: 'snare' },
-                { time: 11520, drum: 'kick' }, { time: 12000, drum: 'snare' },
-                { time: 12480, drum: 'kick' }, { time: 12960, drum: 'snare' },
-                { time: 13440, drum: 'kick' }, { time: 13920, drum: 'snare' },
-                { time: 14400, drum: 'kick' }, { time: 14880, drum: 'snare' },
-                { time: 15360, drum: 'kick' }, { time: 15600, drum: 'kick' }, { time: 15840, drum: 'snare' },
-                { time: 16320, drum: 'kick' }, { time: 16800, drum: 'snare' },
-                { time: 17280, drum: 'kick' }, { time: 17760, drum: 'snare' },
-                { time: 18240, drum: 'kick' }, { time: 18480, drum: 'kick' }, { time: 18720, drum: 'snare' }
+                { time: 0, drum: 'kick' }, { time: 600, drum: 'snare' }, 
+                { time: 1080, drum: 'kick' }, { time: 1320, drum: 'kick' }, { time: 1680, drum: 'snare' }, 
+                { time: 2160, drum: 'kick' }, { time: 2760, drum: 'snare' }, 
+                { time: 3240, drum: 'kick' }, { time: 3480, drum: 'kick' }, { time: 3840, drum: 'snare' }, 
+                { time: 4320, drum: 'kick' }, { time: 4920, drum: 'snare' }, 
+                { time: 5400, drum: 'kick' }, { time: 5640, drum: 'kick' }, { time: 6000, drum: 'snare' }, 
+                { time: 6600, drum: 'kick' }, { time: 7080, drum: 'snare' }, 
+                { time: 7560, drum: 'kick' }, { time: 7800, drum: 'kick' }, { time: 8160, drum: 'snare' }, 
+                { time: 8640, drum: 'kick' }, { time: 9240, drum: 'snare' }, 
+                { time: 9720, drum: 'kick' }, { time: 9960, drum: 'kick' }, { time: 10320, drum: 'snare' }, 
+                { time: 10800, drum: 'kick' }, { time: 11400, drum: 'snare' }, 
+                { time: 11880, drum: 'kick' }, { time: 12120, drum: 'kick' }, { time: 12480, drum: 'snare' }, 
+                { time: 12960, drum: 'kick' }, { time: 13560, drum: 'snare' }, 
+                { time: 14040, drum: 'kick' }, { time: 14280, drum: 'kick' }, { time: 14640, drum: 'snare' }, 
+                { time: 15120, drum: 'kick' }, { time: 15720, drum: 'snare' }, 
+                { time: 16200, drum: 'kick' }, { time: 16440, drum: 'kick' }, { time: 16800, drum: 'snare' }, 
+                { time: 17280, drum: 'kick' }, { time: 17880, drum: 'snare' }, 
+                { time: 18360, drum: 'kick' }, { time: 18600, drum: 'kick' }, { time: 18960, drum: 'snare' }, 
+                { time: 19440, drum: 'kick' }, { time: 20040, drum: 'snare' }, 
+                { time: 20520, drum: 'kick' }, { time: 20760, drum: 'kick' }, { time: 21120, drum: 'snare' }, 
+                { time: 21600, drum: 'kick' }, { time: 22200, drum: 'snare' }, 
+                { time: 22680, drum: 'kick' }, { time: 22920, drum: 'kick' }, { time: 23280, drum: 'snare' }, 
+                { time: 23760, drum: 'kick' }, { time: 24360, drum: 'snare' }, 
+                { time: 24840, drum: 'kick' }, { time: 25080, drum: 'kick' }, { time: 25440, drum: 'snare' }, 
+                { time: 25920, drum: 'kick' }, { time: 26520, drum: 'snare' }, 
+                { time: 27000, drum: 'kick' }, { time: 27240, drum: 'kick' }, { time: 27600, drum: 'snare' }, 
+                { time: 28080, drum: 'kick' }, { time: 28680, drum: 'snare' }, 
+                { time: 29160, drum: 'kick' }, { time: 29400, drum: 'kick' }, { time: 29760, drum: 'snare' }, 
+                { time: 30240, drum: 'kick' }, { time: 30840, drum: 'snare' }, 
+                { time: 31320, drum: 'kick' }, { time: 31560, drum: 'kick' }, { time: 31920, drum: 'snare' }, 
+                { time: 32400, drum: 'kick' }, { time: 33000, drum: 'snare' }, 
+                { time: 33480, drum: 'kick' }, { time: 33720, drum: 'kick' }, { time: 34080, drum: 'snare' }, 
+                { time: 34560, drum: 'kick' }, { time: 35160, drum: 'snare' }, 
+                { time: 35640, drum: 'kick' }, { time: 35880, drum: 'kick' }, { time: 36240, drum: 'snare' }, 
+                { time: 36720, drum: 'kick' }, { time: 37320, drum: 'snare' }, 
+                { time: 37800, drum: 'kick' }, { time: 38040, drum: 'kick' }, { time: 38400, drum: 'snare' }, 
+                { time: 38880, drum: 'kick' }, { time: 39480, drum: 'snare' }, 
+                { time: 40080, drum: 'kick' }, { time: 40320, drum: 'kick' }, { time: 40560, drum: 'snare' }, 
+                { time: 41040, drum: 'kick' }, { time: 41640, drum: 'snare' }, 
+                { time: 42120, drum: 'kick' }, { time: 42360, drum: 'kick' }, { time: 42720, drum: 'snare' } // ОСТАННЯ МІТКА
             ]
         };
         // **********************************************
         
         const elements = {
-            // Елементи основної гри
             startButton: document.getElementById('start-button'),
-            demoButton: document.getElementById('demo-button'), // NEW DEMO BUTTON
             scoreDisplay: document.getElementById('score'),
             timerDisplay: document.getElementById('timer'),
             messageDisplay: document.getElementById('message'),
@@ -545,29 +400,13 @@
             cancelSaveBtn: document.getElementById('cancel-save-btn'),
             laneContainer: document.querySelector('.lane-container'),
             drumPadContainer: document.getElementById('drum-pad-container'),
-            backgroundMusic1: document.getElementById('backgroundMusic1'),
-            backgroundMusic2: document.getElementById('backgroundMusic2'),
+            backgroundMusic: document.getElementById('backgroundMusic'),
             restartButton: document.getElementById('restart-button'), 
             beatIndicator: document.getElementById('beat-indicator'),
             showStatsBtn: document.getElementById('show-stats-btn'),
             statsModal: document.getElementById('stats-modal'),
             statsContent: document.getElementById('stats-content'),
             closeStatsBtn: document.getElementById('close-stats-btn'),
-            styleControls: document.getElementById('style-controls'),
-
-            // Елементи режиму запису
-            recordModeBtn: document.getElementById('record-mode-btn'),
-            recordModal: document.getElementById('record-modal'),
-            recordMessage: document.getElementById('record-message'),
-            recordTrackControls: document.getElementById('record-track-controls'),
-            recordStartBtn: document.getElementById('record-start-btn'),
-            recordStopBtn: document.getElementById('record-stop-btn'),
-            recordedRhythmOutput: document.getElementById('recorded-rhythm-output'),
-            recordResultContainer: document.getElementById('record-result-container'),
-            recordCloseBtn: document.getElementById('record-close-btn'),
-            
-            // NEW ELEMENT
-            idealHitLine: document.getElementById('ideal-hit-line'), 
         };
         
         const drumPads = {
@@ -585,224 +424,49 @@
             originalPadClasses[key] = drumPads[key].className;
         });
 
-        const GAME_DURATION_SECONDS_MAP = {
-            // Встановлюємо максимальну очікувану тривалість. Фактична буде взята з аудіо.
-            'exercise1': 47,
-            'exercise2': 20, 
-        };
-        
-        // **********************************************
-        // * ОНОВЛЕНІ КОНСТАНТИ ВЛУЧАННЯ *
-        // **********************************************
-        const TIMING_TOLERANCE_MS = 150; 
-        
-        // Ідеальна позиція ноти (початок Hit Zone) відносно ВЕРХУ lane-container (390px - 80px = 310px)
-        const IDEAL_HIT_Y_PX = 260; 
-
-        // Загальна висота падіння в пікселях (висота lane-container + початкова позиція ноти)
-        // Нота починається на top: -30px. Lane-container висота: 310px (390-80). Загальна дистанція падіння до нижнього краю: 310 + 30 = 340px
-        const TOTAL_FALL_DISTANCE_PX = elements.laneContainer ? (elements.laneContainer.clientHeight + 30) : (310 + 30); 
-        
-        // Швидкість падіння (мс), щоб нота ідеально досягала IDEAL_HIT_Y_PX
-        const currentFallSpeed = 3800; 
-        
-        // Час, який потрібен для падіння до IDEAL_HIT_Y_PX (260px)
-        // (260 + 30) * (3800 / 340) ≈ 3235 мс
-        const NEW_FALL_SPEED_MS = Math.round((IDEAL_HIT_Y_PX + 30) * (3800 / 340)); // 3235 мс
-
-        // Фактична швидкість падіння для анімації (час, за який нота долітає до кінця lane-container)
-        const ANIMATION_DURATION_MS = 3800; 
-        
-        // Різниця часу між ідеальною точкою попадання (IDEAL_HIT_Y_PX) та кінцем анімації (DRUM_PAD_Y_PX)
-        // Зміщення, яке визначає, як рано чи пізно має спрацювати блимання барабана
-        const HIT_TIME_OFFSET_MS = ANIMATION_DURATION_MS - NEW_FALL_SPEED_MS - 20; // 545 мс
-
-        // **********************************************
-        // * КОНСТАНТА ДЛЯ СИНЬОЇ ЛІНІЇ *
-        // **********************************************
-        // Фактична Y-позиція ідеального удару:
-        const ACTUAL_HIT_LINE_Y_PX = 275; 
-
-        // **********************************************
-        // **********************************************
-
+        const GAME_DURATION_SECONDS = 47; // ФІКСОВАНА ТРИВАЛІСТЬ ГРИ: 47 секунд
+        const FLASH_CORRECTION_MS = 200; // КОРЕКЦІЯ ПІДСВІТКИ (мc)
+        const TIMING_TOLERANCE_MS = 300; // ДОПУСТИМИЙ ЛЮФТ ВЛУЧАННЯ (±150 мс) - ПОВЕРНУТО З 50 мс
 
         let score = 0, gameActive = false, soundsReady = false, timeLeft = 0;
         let gameTimer, beatTimer;
         let rhythmTimeouts = [];
-        let processedRhythm = rhythmPatterns.exercise1;
-        let currentExercise = 'exercise1';
-        let currentBGM;
-        let trackDuration = GAME_DURATION_SECONDS_MAP[currentExercise];
-        const HIT_ZONE_OFFSET = 50; 
+        let processedRhythm = [];
+        let trackDuration = 0;
+        const currentFallSpeed = 3800; 
+        const HIT_ZONE_OFFSET = 50; // ВІЗУАЛЬНА ЗОНА (для видалення нот)
         let notesOnScreen = [];
-        let noteIdCounter = 0; 
-        let gameStartTime = 0; 
-        let sessionLog = []; 
-        const BPM = 100; // Базовий BPM для квантизації
-        const BEAT_INTERVAL = (60 / BPM) * 1000; 
+        const BPM = 100; // Орієнтовний BPM для візуального метронома
+        const BEAT_INTERVAL = (60 / BPM) * 1000; // Інтервал метронома в мс (600 мс)
         
-        // Стан аудіо
-        let bgmReady = {
-            'backgroundMusic1': false,
-            'backgroundMusic2': false,
-        };
-        
-        // **********************************************
-        // * ВИПРАВЛЕННЯ БАГУ: ОГОЛОШУЄМО ЗМІННІ РЕЖИМУ ЗАПИСУ ГЛОБАЛЬНО *
-        // **********************************************
-        let isRecording = false;
-        let recordedHits = [];
-        let recordStartTime = 0;
-        let recordAudio = null;
-        let isDemoMode = false;
-        // **********************************************
-        
-        // **********************************************
-        // * ФУНКЦІЯ ДЛЯ ВСТАНОВЛЕННЯ ПОЗИЦІЇ СИНЬОЇ ЛІНІЇ *
-        // **********************************************
-        function setIdealHitLinePosition() {
-             // Використовуємо жорстко задану позицію 275px, щоб вона відповідала фактичному часу спрацювання
-             const VISUAL_HIT_LINE_Y_PX = ACTUAL_HIT_LINE_Y_PX; 
+        let sessionLog = []; // ЛОГ СЕСІЇ
+        let noteIdCounter = 0; // Лічильник для унікальних ID нот
+        let gameStartTime = 0; // Час початку гри для логування
 
-             if (elements.idealHitLine) {
-                 elements.idealHitLine.style.top = `${VISUAL_HIT_LINE_Y_PX}px`;
-             }
-        }
-        // **********************************************
-
-        // **********************************************
-        // * ФУНКЦІЇ ДЛЯ ЗАВАНТАЖЕННЯ АУДІО (ФІНАЛЬНЕ ВИПРАВЛЕННЯ MOBILE SAFARI) *
-        // **********************************************
-        
         async function loadSound(name, url) {
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
             audioBuffers[name] = await audioContext.decodeAudioData(arrayBuffer);
         }
 
-        function setButtonsState(isDisabled, message) {
-            elements.startButton.disabled = isDisabled;
-            elements.demoButton.disabled = isDisabled;
-            elements.messageDisplay.textContent = message;
-            // Додаткова візуальна перевірка готовності
-            if (!isDisabled) {
-                 elements.messageDisplay.classList.remove('text-slate-600');
-                 elements.messageDisplay.classList.add('text-green-600');
-            } else {
-                 elements.messageDisplay.classList.remove('text-green-600');
-                 elements.messageDisplay.classList.add('text-slate-600');
+        function checkReadyState() {
+            if (soundsReady && trackDuration > 0) {
+                elements.startButton.disabled = false;
+                elements.messageDisplay.textContent = "Готовий? Натисни 'Почати'";
             }
         }
 
         async function loadAllSounds() {
-            setButtonsState(true, "Завантаження... (барабанні звуки)");
-            
             try {
-                // 1. Завантаження ударних звуків (Web Audio API)
-                const drumPromises = Object.entries(drumSounds).map(([name, url]) => loadSound(name, url));
-                await Promise.all(drumPromises);
-
+                const promises = Object.entries(drumSounds).map(([name, url]) => loadSound(name, url));
+                await Promise.all(promises);
                 soundsReady = true;
-                
-                // 2. Ініціалізація HTML Audio елементів (вони завантажуються ледачо)
-                
-                // 3. Спроба встановити тривалість для відображення таймера
-                // Це не буде блокувати активацію кнопок, але оновимо trivalist.
-                elements.backgroundMusic1.addEventListener('loadedmetadata', () => {
-                    if(elements.backgroundMusic1.duration) GAME_DURATION_SECONDS_MAP['exercise1'] = elements.backgroundMusic1.duration;
-                    if(currentExercise === 'exercise1') setCurrentExercise('exercise1');
-                });
-                elements.backgroundMusic2.addEventListener('loadedmetadata', () => {
-                    if(elements.backgroundMusic2.duration) GAME_DURATION_SECONDS_MAP['exercise2'] = elements.backgroundMusic2.duration;
-                    if(currentExercise === 'exercise2') setCurrentExercise('exercise2');
-                });
-                
-                setButtonsState(false, "Готовий? Натисни 'Почати'");
-                
+                checkReadyState();
             } catch (error) {
+                elements.messageDisplay.textContent = "Помилка завантаження звуків.";
                 console.error("Audio loading error:", error);
-                setButtonsState(true, `Помилка завантаження аудіо (Барабани). Спробуй перезавантажити.`);
             }
         }
-        
-        // **********************************************
-        // * КІНЕЦЬ: ВИПРАВЛЕННЯ MOBILE SAFARI *
-        // **********************************************
-        
-        
-        // **********************************************
-        // * ФУНКЦІЯ КВАНТИЗАЦІЇ РИТМУ *
-        // **********************************************
-        function quantizeRhythm(rhythm) {
-            if (!rhythm || rhythm.length === 0) return [];
-
-            // Інтервал 16-ї ноти для BPM 100
-            // 60000 / 100 BPM = 600 мс (чвертна)
-            // 600 мс / 4 = 150 мс (16-та)
-            const sixteenthNoteMs = BEAT_INTERVAL / 4; // 150 мс
-            
-            // 1. Спочатку віднімаємо офсет, щоб знайти фактичний час удару (від t=0)
-            const firstHitTime = rhythm[0].time; // Час першого удару
-            
-            // 2. Створюємо новий, квантований масив
-            const quantizedRhythm = rhythm.map(note => {
-                // Час удару відносно початку музики
-                const hitTimeFromStart = note.time - firstHitTime;
-
-                // Знаходимо найближчий ідеальний час у сітці 16-х нот
-                const idealTimeIndex = Math.round(hitTimeFromStart / sixteenthNoteMs);
-                const quantizedHitTime = idealTimeIndex * sixteenthNoteMs;
-                
-                return {
-                    drum: note.drum,
-                    // Час СПАВНУ = Квантований час удару
-                    time: quantizedHitTime,
-                };
-            }).filter(note => note.time >= 0); // Фільтруємо негативні, якщо вони з'явилися
-
-            
-            // Тепер ми повинні додати компенсацію NEW_FALL_SPEED_MS, як це робиться у prepareRhythmForGame
-            const finalDemoRhythm = quantizedRhythm.map(note => ({
-                drum: note.drum,
-                // Час СПАВНУ = Квантований час удару + (час першого удару - час падіння)
-                time: note.time + (firstHitTime - NEW_FALL_SPEED_MS)
-            }));
-            
-            return finalDemoRhythm;
-        }
-
-        // **********************************************
-        // * ФУНКЦІЯ ДЛЯ ПІДГОТОВКИ РИТМУ (для гри) *
-        // **********************************************
-        function prepareRhythmForGame(rhythm) {
-            if (!rhythm || rhythm.length === 0) return [];
-            
-            const firstHitTime = rhythm[0].time; 
-            const NEW_FALL_SPEED_MS_LOCAL = NEW_FALL_SPEED_MS; // 3235 мс
-            
-            // Коригуємо всі таймкоди
-            const adjustedRhythm = rhythm.map(note => {
-                // Час СПАВНУ = Оригінальний час удару - NEW_FALL_SPEED_MS
-                return {
-                    drum: note.drum,
-                    time: note.time - NEW_FALL_SPEED_MS_LOCAL,
-                };
-            });
-            
-            // Тепер мінімальний час спавну — 342 мс.
-            const minTime = Math.min(...adjustedRhythm.map(n => n.time));
-            if (minTime < 0) {
-                 // Цей блок має бути мертвим, оскільки ми розраховуємо на це
-                 console.warn("Negative spawn time detected, adjusting all times by minimum negative offset.");
-                 const offset = Math.abs(minTime);
-                 return adjustedRhythm.map(n => ({ ...n, time: n.time + offset }));
-            }
-
-            return adjustedRhythm;
-        }
-
-        // **********************************************
         
         function playSound(name) {
             if (!soundsReady || !audioBuffers[name]) return;
@@ -813,52 +477,25 @@
             source.start(0);
         }
         
-        function setCurrentExercise(exercise) {
-            currentExercise = exercise;
-            // ТУТ МИ ВИКЛИКАЄМО ФУНКЦІЮ ПІДГОТОВКИ, ЯКА КОРИГУЄ ТАЙМКОДИ
-            processedRhythm = prepareRhythmForGame(rhythmPatterns[exercise]); 
-            trackDuration = GAME_DURATION_SECONDS_MAP[exercise];
-            
-            // Встановлюємо активний BGM для гри
-            currentBGM = exercise === 'exercise1' ? elements.backgroundMusic1 : elements.backgroundMusic2;
-            
-            // Оновлюємо відображення таймера
-            timeLeft = trackDuration;
-            updateTimerDisplay();
-            
-            // Скидаємо гру на випадок, якщо вона була активна
-            if (!gameActive) {
-                elements.scoreDisplay.textContent = 0;
-                elements.messageDisplay.textContent = "Готовий? Натисни 'Почати'";
-                // Перевіряємо готовність через загальний прапорець soundsReady
-                elements.startButton.disabled = !soundsReady; 
-                elements.demoButton.disabled = !soundsReady;
-            }
-        }
-        
         function flashPadAtTime(drumName, timeMs) {
             const pad = drumPads[drumName];
             if (!pad) return;
             const flashDuration = 100; 
 
-            // timeMs - це ЧАС СПАВНУ НОТИ (вже скоригований)
-            // Ми додаємо NEW_FALL_SPEED_MS, щоб отримати час удару.
-            const hitTime = timeMs + NEW_FALL_SPEED_MS;
-
             const timeoutId = setTimeout(() => {
-                if (!gameActive && !isDemoMode) return; // Flash тільки в режимі гри або демо
+                if (!gameActive) return;
 
                 pad.classList.add('auto-flash');
                 
                 setTimeout(() => {
                     pad.classList.remove('auto-flash');
                 }, flashDuration);
-            // Фактичний час спрацювання: час спавну + час падіння - зміщення
-            }, hitTime - HIT_TIME_OFFSET_MS); 
+            }, timeMs);
             
             rhythmTimeouts.push(timeoutId);
         }
         
+        // Логіка візуального метронома
         function startBeatIndicator() {
             let nextBeatTime = audioContext.currentTime;
             
@@ -879,7 +516,7 @@
                     nextBeatTime += BEAT_INTERVAL / 1000; 
                 }
 
-                if (gameActive || isDemoMode) { // Check for Demo Mode too
+                if (gameActive) {
                     beatTimer = setTimeout(scheduleBeat, 100);
                 }
             }
@@ -891,28 +528,22 @@
 
         async function init() {
             try {
-                // Since this app does not use Canvas's auth token, sign in anonymously.
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Anonymous sign-in failed:", error);
                 elements.leaderboardBtn.disabled = true;
                 elements.messageDisplay.textContent = 'Помилка таблиці лідерів.';
             }
-            // Ініціалізація гучності та встановлення поточної вправи
-            elements.backgroundMusic1.volume = 0.3;
-            elements.backgroundMusic2.volume = 0.3;
-            elements.backgroundMusic1.loop = false; 
-            elements.backgroundMusic2.loop = false; 
+            elements.backgroundMusic.volume = 0.3;
+            elements.backgroundMusic.loop = false; 
             
-            // Встановлення позиції синьої лінії
-            setIdealHitLinePosition(); 
-            
-            // Завантаження всіх ресурсів
-            await loadAllSounds();
-            
-            // Встановити початкову вправу після завантаження
-            setCurrentExercise(currentExercise); 
+            processedRhythm = rhythmPatterns.exercise1; 
 
+            // Встановлюємо початкову тривалість гри на 47 секунд
+            trackDuration = GAME_DURATION_SECONDS; 
+            timeLeft = trackDuration;
+
+            await loadAllSounds();
             setupEventListeners();
         }
         
@@ -923,238 +554,86 @@
         }
         
         function startGame() {
-            if (!soundsReady || processedRhythm.length === 0) {
-                 elements.messageDisplay.textContent = '❌ Аудіо ще завантажується. Зачекайте.';
-                 return;
-            }
+            if (!soundsReady || processedRhythm.length === 0) return;
 
-            // ПЕРЕВІРКА ГОТОВНОСТІ ТРЕКУ ПЕРЕД ГРОЮ
-            if (currentBGM.readyState < 3) {
-                 elements.messageDisplay.textContent = '❌ Фоновий трек ще завантажується. Зачекайте кілька секунд.';
-                 currentBGM.load(); // Примусове завантаження
-                 return;
-            }
-            
-            // **********************************************
-            // * ВИПРАВЛЕННЯ БАГУ ТРИВАЛОСТІ: ВИКОРИСТОВУЄМО АУДІО onended *
-            // **********************************************
-            // 1. Встановлюємо тривалість гри на основі фактичної тривалості треку
-            if (currentBGM.duration && !isNaN(currentBGM.duration)) {
-                 trackDuration = Math.ceil(currentBGM.duration);
-                 timeLeft = trackDuration;
-                 updateTimerDisplay();
-                 
-                 // 2. Встановлюємо слухача на завершення треку
-                 currentBGM.onended = () => {
-                     endGame(true); // Завершуємо гру, коли музика закінчилася
-                 };
-            }
-            // **********************************************
-
-            // Reset demo mode flag
-            isDemoMode = false;
-            
-            currentBGM.currentTime = 0;
-            // Активація аудіоконтексту та відтворення
-            audioContext.resume().then(() => {
-                currentBGM.play().catch(error => {
-                    console.error("Автозапуск музики заблоковано:", error);
-                });
+            elements.backgroundMusic.play().catch(error => {
+                console.log("Автозапуск музики заблоковано. Запуститься після першого натискання.");
             });
+            elements.backgroundMusic.currentTime = 0;
 
             score = 0;
             elements.scoreDisplay.textContent = score;
-            sessionLog = []; 
+            sessionLog = []; // Очистка логу
             noteIdCounter = 0;
-            gameStartTime = performance.now(); 
+            gameStartTime = performance.now(); // Зберігаємо час початку гри
 
             gameActive = true;
             elements.startButton.disabled = true;
-            elements.demoButton.disabled = true; // DISABLE DEMO BUTTON IN GAME MODE
             elements.startButton.textContent = 'Гра триває...';
             elements.restartButton.disabled = false;
             elements.messageDisplay.textContent = 'Грай!';
             notesOnScreen.forEach(note => note.element.remove());
             notesOnScreen = [];
             
+            timeLeft = trackDuration;
+            updateTimerDisplay();
             
             startBeatIndicator(); 
 
             gameTimer = setInterval(() => {
-                // Використовуємо timeLeft лише для відображення, а не для завершення гри
-                if (timeLeft > 0) timeLeft--;
+                timeLeft--;
                 updateTimerDisplay();
-                // Гра завершиться через onended
+                if (timeLeft <= 0) {
+                    endGame(true); // Game ended by timer
+                }
             }, 1000);
             
             rhythmTimeouts.forEach(clearTimeout);
             rhythmTimeouts = [];
             
-            // ПЛАНУВАННЯ НОТ З ЧАСОВОЮ МІТКОЮ ВЛУЧАННЯ
+            // **********************************************
+            // * ПЛАНУВАННЯ НОТ З ЧАСОВОЮ МІТКОЮ ВЛУЧАННЯ *
+            // **********************************************
             processedRhythm.forEach(note => {
-                const dropTime = note.time; // Це вже ЧАС СПАВНУ!
-                
-                // Ідеальний час удару = час спавну + час падіння
-                const idealHitTimeMs = dropTime + NEW_FALL_SPEED_MS; 
-                const relativeHitTime = gameStartTime + idealHitTimeMs; 
+                const dropTime = note.time;
+                const hitTime = dropTime + currentFallSpeed; 
+                const relativeHitTime = gameStartTime + hitTime; 
 
+                // 1. Плануємо появу ноти
                 const noteTimeoutId = setTimeout(() => {
-                    if(gameActive) spawnNote(note.drum, relativeHitTime, dropTime); 
+                    if(gameActive) spawnNote(note.drum, relativeHitTime, dropTime); // Передаємо idealHitTime та dropTime
                 }, dropTime);
                 rhythmTimeouts.push(noteTimeoutId);
 
-                // flashPadAtTime має спрацювати у момент idealHitTimeMs
-                flashPadAtTime(note.drum, idealHitTimeMs); 
+                // 2. Плануємо підсвічування кнопки
+                flashPadAtTime(note.drum, hitTime - FLASH_CORRECTION_MS); 
             });
             
-            // **********************************************
-            // * ВИДАЛЕНО: Видаляємо таймаут для завершення гри *
-            // **********************************************
-        }
-        
-        function startDemoMode() {
-            if (!soundsReady || processedRhythm.length === 0) {
-                elements.messageDisplay.textContent = '❌ Зачекайте завантаження треку.';
-                elements.messageDisplay.classList.add('text-red-500');
-                return;
-            }
-
-            // ПЕРЕВІРКА ГОТОВНОСТІ ТРЕКУ ПЕРЕД ДЕМО
-            if (currentBGM.readyState < 3) {
-                 elements.messageDisplay.textContent = '❌ Фоновий трек ще завантажується. Зачекайте кілька секунд.';
-                 currentBGM.load(); // Примусове завантаження
-                 return;
-            }
+            // Додаємо фінальний таймаут для завершення гри, якщо ритм коротший за ліміт
+            const rhythmDurationMs = processedRhythm[processedRhythm.length - 1].time;
             
-            // **********************************************
-            // * ВИПРАВЛЕННЯ ДЕМО: ВИКОРИСТОВУЄМО АУДІО onended *
-            // **********************************************
-            if (currentBGM.duration && !isNaN(currentBGM.duration)) {
-                 currentBGM.onended = () => {
-                     endDemoMode(); // Завершуємо Демо, коли музика закінчилася
-                 };
-            }
-            // **********************************************
-
-            // Скидаємо гру на випадок, якщо вона була активна
-            resetGame(); 
-
-            isDemoMode = true;
-            gameActive = false; // Вимикаємо ігровий режим, щоб ігнорувати ввід користувача
-
-            currentBGM.currentTime = 0;
-            audioContext.resume().then(() => {
-                currentBGM.play().catch(error => {
-                    console.error("Автозапуск музики заблоковано в Демо режимі:", error);
-                });
-            });
-
-            elements.startButton.disabled = true;
-            elements.demoButton.disabled = true;
-            elements.restartButton.disabled = false;
-            elements.messageDisplay.textContent = '🎶 Демонстрація ритму...';
-            elements.scoreDisplay.textContent = 'DEMO';
-            
-            notesOnScreen.forEach(note => note.element.remove());
-            notesOnScreen = [];
-
-            gameStartTime = performance.now();
-            
-            startBeatIndicator();
-            
-            rhythmTimeouts.forEach(clearTimeout);
-            rhythmTimeouts = [];
-
-            // **********************************************
-            // * ВИКОРИСТАННЯ КВАНТОВАНОГО РИТМУ ДЛЯ ДЕМО *
-            // **********************************************
-            const demoRhythm = quantizeRhythm(rhythmPatterns[currentExercise]);
-
-            // ПЛАНУВАННЯ НОТ ТА АВТОМАТИЧНИХ УДАРІВ
-            demoRhythm.forEach(note => {
-                const dropTime = note.time; // Це ЧАС СПАВНУ!
-                
-                // Ідеальний час влучання
-                const idealHitTimeMs = dropTime + NEW_FALL_SPEED_MS; 
-
-                // 1. СПАВН НОТИ
-                const noteTimeoutId = setTimeout(() => {
-                    if(isDemoMode) spawnNote(note.drum, gameStartTime + idealHitTimeMs, dropTime); 
-                }, dropTime);
-                rhythmTimeouts.push(noteTimeoutId);
-                
-                // 2. АВТОМАТИЧНИЙ УДАР (СИНХРОННО)
-                const hitTimeoutId = setTimeout(() => {
-                    if (isDemoMode) {
-                         // Симулюємо ідеальне натискання: звук та візуальне спрацювання
-                         playSound(note.drum); 
-                         const pad = drumPads[note.drum];
-                         if (pad) {
-                            animatePad(note.drum, 'hit-correct');
-                         }
-
-                         // Знаходимо ідеальну ноту для "влучання" (це потрібно для візуалізації correct-hit)
-                         const targetNote = notesOnScreen.find(n => n.drum === note.drum && !n.hasBeenHit);
-
-                         if (targetNote) {
-                            targetNote.hasBeenHit = true;
-                            // Візуалізація correct-hit
-                            targetNote.element.classList.add('correct-hit');
-                            
-                            setTimeout(() => {
-                                targetNote.element.remove();
-                                notesOnScreen = notesOnScreen.filter(n => n !== targetNote);
-                                clearTimeout(targetNote.fallTimer); 
-                            }, 100); 
-                         }
+            if (rhythmDurationMs / 1000 < GAME_DURATION_SECONDS) {
+                // Додатковий таймаут, щоб дати нотам допасти
+                setTimeout(() => {
+                    if (gameActive && timeLeft > 0) {
+                        endGame(true); 
                     }
-                }, idealHitTimeMs);
-                rhythmTimeouts.push(hitTimeoutId);
-
-            });
-
-             // **********************************************
-             // * ВИДАЛЕНО: Видаляємо таймаут для завершення ДЕМО *
-             // **********************************************
-        }
-        
-        function endDemoMode() {
-             currentBGM.pause();
-             currentBGM.onended = null; // Видаляємо слухача
-             isDemoMode = false;
-             clearInterval(gameTimer);
-             clearTimeout(beatTimer);
-             rhythmTimeouts.forEach(clearTimeout);
-             rhythmTimeouts = [];
-             
-             notesOnScreen.forEach(note => note.element.remove());
-             notesOnScreen = [];
-             
-             Object.values(drumPads).forEach(pad => pad.classList.remove('auto-flash'));
-             
-             elements.messageDisplay.textContent = 'Демонстрація завершена.';
-             elements.scoreDisplay.textContent = 0;
-
-             // Reset buttons
-             elements.startButton.disabled = !soundsReady;
-             elements.demoButton.disabled = !soundsReady;
-             elements.restartButton.disabled = true;
-             elements.startButton.textContent = 'Почати';
+                }, rhythmDurationMs + 4000); 
+            }
         }
 
         function endGame(timedOut = false) {
-            currentBGM.pause();
-            currentBGM.onended = null; // Видаляємо слухача
+            elements.backgroundMusic.pause();
             gameActive = false;
             clearInterval(gameTimer);
-            clearTimeout(beatTimer);
+            clearTimeout(beatTimer); // Зупинка метронома
             rhythmTimeouts.forEach(clearTimeout);
             rhythmTimeouts = [];
             
+            // Очищення кнопки від потенційного авто-підсвічування
             Object.values(drumPads).forEach(pad => pad.classList.remove('auto-flash'));
             
-            elements.startButton.disabled = !soundsReady;
-            elements.demoButton.disabled = !soundsReady; // ENABLE DEMO BUTTON
+            elements.startButton.disabled = false;
             elements.startButton.textContent = 'Почати';
             elements.restartButton.disabled = true;
             
@@ -1165,53 +644,38 @@
         }
         
         function resetGame() {
-            if (currentBGM) {
-                currentBGM.pause();
-                currentBGM.currentTime = 0;
-                currentBGM.onended = null; // Видаляємо слухача
-            }
+            elements.backgroundMusic.pause();
+            elements.backgroundMusic.currentTime = 0;
             gameActive = false;
-            isDemoMode = false; // Reset demo mode
             clearInterval(gameTimer);
-            clearTimeout(beatTimer); 
+            clearTimeout(beatTimer); // Зупинка метронома
             rhythmTimeouts.forEach(clearTimeout);
             rhythmTimeouts = [];
             notesOnScreen.forEach(note => note.element.remove());
             notesOnScreen = [];
 
             elements.saveScoreModal.classList.remove('visible');
-            elements.statsModal.classList.remove('visible');
-            elements.recordModal.classList.remove('visible'); // Закриваємо модалку розробника
-            
+            elements.statsModal.classList.remove('visible'); // Закриваємо статистику
             score = 0;
             elements.scoreDisplay.textContent = 0;
-            sessionLog = []; 
+            sessionLog = []; // Очистка логу
 
+            // Очищення кнопки від потенційного авто-підсвічування
             Object.values(drumPads).forEach(pad => pad.classList.remove('auto-flash'));
 
+            // Скидаємо таймер на фіксовану тривалість (47 секунд)
             timeLeft = trackDuration; 
             updateTimerDisplay();
             
             elements.messageDisplay.textContent = "Готовий? Натисни 'Почати'";
             
-            // **********************************************
-            // * ВИПРАВЛЕННЯ: ЗАБЕЗПЕЧУЄМО ДОСТУПНІСТЬ КНОПОК *
-            // **********************************************
-            elements.startButton.disabled = !soundsReady;
-            elements.demoButton.disabled = !soundsReady;
+            elements.startButton.disabled = false;
             elements.restartButton.disabled = true;
-            // **********************************************
-
-            // Скидаємо стан запису
-            isRecording = false;
-            recordedHits = [];
-            recordAudio = null;
         }
         
         async function saveScore() {
              const playerName = elements.playerNameInput.value.trim();
             if (!playerName) {
-                // Якщо ім'я не введено, просто закриваємо модалку і скидаємо гру
                 document.getElementById('save-score-modal').classList.remove('visible');
                 resetGame();
                 return;
@@ -1220,7 +684,7 @@
                 await addDoc(collection(db, "leaderboard"), {
                     name: playerName,
                     score: score,
-                    style: currentExercise, // Зберігаємо назву вправи
+                    style: "Вправа 1",
                     timestamp: serverTimestamp()
                 });
                 resetGame();
@@ -1233,18 +697,10 @@
         }
         
         function showLeaderboard() {
-            // Закриваємо всі активні модалки, якщо вони відкриті
-            elements.saveScoreModal.classList.remove('visible');
-            elements.statsModal.classList.remove('visible');
-            elements.recordModal.classList.remove('visible');
-            
-            // Перемикаємо види
             elements.gameView.classList.add('hidden');
             elements.leaderboardView.classList.remove('hidden');
 
             const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(10));
-            
-            // Встановлюємо слухач для оновлення в реальному часі
             onSnapshot(q, (snapshot) => {
                 elements.leaderboardList.innerHTML = '';
                 if (snapshot.empty) {
@@ -1272,20 +728,7 @@
                  elements.leaderboardList.innerHTML = '<p class="text-center p-4 text-red-500">Помилка завантаження.</p>';
             });
         }
-
-        function showSessionStatistics() {
-            // ... (Функція showSessionStatistics - без змін)
-        }
         
-        function handleMiss(note) {
-             // ... (Функція handleMiss - без змін)
-        }
-        
-        function animatePad(drumName, result) {
-            // ... (Функція animatePad - без змін)
-        }
-
-
         function spawnNote(drumName, idealHitTime, dropTime) {
             const laneElement = drumLanes[drumName];
             if(!laneElement) return;
@@ -1299,54 +742,52 @@
                 element: noteElement, 
                 drum: drumName, 
                 hasBeenHit: false,
-                id: ++noteIdCounter, 
-                idealHitTime: idealHitTime, // Новий час
-                dropTime: dropTime 
+                id: ++noteIdCounter, // Унікальний ID для логування
+                idealHitTime: idealHitTime, 
+                dropTime: dropTime // Таймкод ноти з ритму
             };
             notesOnScreen.push(note);
-
-            // Час, коли нота досягне drum-pad (310px) 
-            const timeoutDuration = dropTime + ANIMATION_DURATION_MS; 
 
             note.fallTimer = setTimeout(() => {
                 if (!note.hasBeenHit) handleMiss(note);
                 note.element.remove();
                 notesOnScreen = notesOnScreen.filter(n => n !== note);
-            }, timeoutDuration); // Видаляємо ноту після повного падіння
+            }, currentFallSpeed);
             
-            // Анімація падіння до самого низу lane-container
             noteElement.style.transform = `translateY(${elements.laneContainer.clientHeight + 40}px)`;
-            noteElement.style.transitionDuration = `${ANIMATION_DURATION_MS / 1000}s`;
+            noteElement.style.transitionDuration = `${currentFallSpeed / 1000}s`;
+        }
+        
+        function animatePad(drumName, result) {
+            const pad = drumPads[drumName];
+            if (!pad) return;
+
+            const baseClass = originalPadClasses[drumName];
+            pad.className = `${baseClass} ${drumName} playing`; 
+
+            if (result) {
+                pad.classList.add(result); 
+            }
+
+            setTimeout(() => {
+                pad.className = baseClass;
+                pad.classList.add(drumName);
+            }, 200);
         }
 
         function handleKeyPress(drumName) {
             playSound(drumName);
 
-            // Ігноруємо ввід користувача в режимі Демо
-            if (isDemoMode) return; 
-
-            if (isRecording) {
-                // ЛОГІКА ЗАПИСУ РИТМУ
-                const pressTime = performance.now();
-                const relativeTime = pressTime - recordStartTime;
-                
-                recordedHits.push({ drum: drumName, time: Math.round(relativeTime) });
-                
-                // Візуальний зворотний зв'язок у режимі запису
-                elements.recordMessage.textContent = `🔴 ЗАПИС: ${drumName} @ ${relativeTime.toFixed(0)} мс`;
-                return;
-            }
-
-
             if (!gameActive) {
                 animatePad(drumName);
                 return;
             }
-            
+
+            const pressTime = performance.now(); 
             let hitsCount = 0;
             const hitNotes = [];
-            const pressTime = performance.now(); 
 
+            // Шукаємо ноту за ЧАСОВИМ вікном
             for (let i = notesOnScreen.length - 1; i >= 0; i--) {
                 const note = notesOnScreen[i];
                 if (note.drum === drumName && !note.hasBeenHit) {
@@ -1356,37 +797,29 @@
                     if (timeDifference < TIMING_TOLERANCE_MS) {
                         hitsCount++;
                         note.hasBeenHit = true;
+                        note.element.classList.add('hit');
                         
-                        // **********************************************
-                        // * ВИПРАВЛЕННЯ: ПІДСВІЧУВАННЯ НОТИ ЗЕЛЕНИМ *
-                        // **********************************************
-                        note.element.classList.add('correct-hit');
-                        
-                        // Нота зникає трохи пізніше, після візуалізації влучання
-                        setTimeout(() => {
-                            note.element.remove();
-                            notesOnScreen = notesOnScreen.filter(n => n !== note);
-                            clearTimeout(note.fallTimer); // Зупиняємо таймаут промаху
-                        }, 100); 
-                        // **********************************************
-                        
+                        // Записуємо деталі влученої ноти
                         hitNotes.push({
                             id: note.id,
                             dropTime: note.dropTime,
                             idealHitTime: note.idealHitTime,
-                            deviation: pressTime - note.idealHitTime, 
+                            deviation: pressTime - note.idealHitTime, // + означає пізно, - означає рано
                         });
                     }
                 }
             }
             
-            // ЛОГ: НАТИСКАННЯ КЛАВІШІ (ІГРОВИЙ РЕЖИМ)
+            // **********************************************
+            // * ЛОГ: НАТИСКАННЯ КЛАВІШІ *
+            // **********************************************
             sessionLog.push({
                 type: 'keyPress',
                 drum: drumName,
-                time: pressTime - gameStartTime, 
+                time: pressTime - gameStartTime, // час від початку гри
                 result: hitsCount > 0 ? 'CORRECT' : 'MISSED_KEY',
                 hitCount: hitsCount,
+                hitNotes: hitNotes,
             });
 
             if (hitsCount > 0) {
@@ -1398,249 +831,170 @@
             }
         }
 
-        function generateRhythmOutput() {
-            let output = '';
-            
-            if (recordedHits.length === 0) {
-                 output = '// Ударів не записано. Спробуйте ще раз.';
-            } else {
-                 output = '[\n';
-                 recordedHits.forEach((hit, index) => {
-                    const comma = index < recordedHits.length - 1 ? ',' : '';
-                    output += `    { time: ${hit.time}, drum: '${hit.drum}' }${comma}\n`;
-                 });
-                 output += ']';
-            }
-            
-            elements.recordedRhythmOutput.value = output;
-            elements.recordResultContainer.classList.remove('hidden');
-            
-            // Автоматичне виділення тексту для копіювання
-            elements.recordedRhythmOutput.select();
-            elements.recordedRhythmOutput.focus();
+        function handleMiss(note) {
+             // **********************************************
+             // * ЛОГ: ПРОПУЩЕНА НОТА *
+             // **********************************************
+             sessionLog.push({
+                type: 'noteMiss',
+                drum: note.drum,
+                time: note.idealHitTime - gameStartTime, // Час, коли вона мала бути зіграна
+                result: 'MISSED_NOTE',
+                noteId: note.id,
+                dropTime: note.dropTime,
+             });
         }
 
-        // --- GEMINI API INTEGRATION ---
-        async function analyzeRhythm() {
-            const rawRhythm = elements.recordedRhythmOutput.value;
-            if (!rawRhythm || rawRhythm.includes('Ударів не записано')) {
-                 // Тут раніше була alert, але оскільки ми не використовуємо alert, просто виводимо повідомлення
-                 elements.recordMessage.textContent = 'Спершу запишіть ритм, або вставте коректний масив таймкодів.';
-                 elements.recordMessage.classList.add('text-red-500');
-                 return;
+        // **********************************************
+        // * ФУНКЦІЯ: ВІДОБРАЖЕННЯ СТАТИСТИКИ *
+        // **********************************************
+        function showSessionStatistics() {
+            const content = elements.statsContent;
+            content.innerHTML = '';
+            
+            if (sessionLog.length === 0) {
+                content.innerHTML = '<p class="text-center text-slate-500">Лог сесії порожній. Зіграйте гру, щоб побачити аналіз.</p>';
+                elements.statsModal.classList.add('visible');
+                return;
             }
-            
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const analysisOutput = elements.analysisOutput;
-            const analyzeBtn = elements.recordModal.querySelector('#analyze-rhythm-btn');
-            
-            analyzeBtn.disabled = true;
-            analyzeBtn.textContent = '✨ Аналіз...';
-            analysisOutput.classList.remove('hidden');
-            
-            try {
-                // Видаляємо коментарі перед парсингом
-                const cleanRhythm = rawRhythm.split(';')[0].replace(/\/\/.*$/gm, '');
-                const rhythmData = JSON.parse(cleanRhythm);
-                
-                // Перевірка на коректний формат даних для API
-                if (!Array.isArray(rhythmData) || rhythmData.some(d => !d.drum || typeof d.time !== 'number')) {
-                    throw new Error("Некоректний формат ритмічних даних.");
-                }
 
-                const payload = {
-                    contents: [{ parts: [{ text: `Проаналізуй цей ритмічний патерн: ${JSON.stringify(rhythmData)}. Розрахуй BPM, визнач жанр та дай пораду.` }] }],
-                    systemInstruction: {
-                        parts: [{ text: `Ви є професійним музичним аналітиком. Ваше завдання — проаналізувати ритмічний патерн, наданий у вигляді JSON-масиву з таймкодами ударів (бас-барабан 'kick' та малий барабан 'snare'), та надати його структуру. Ви повинні повернути відповідь у СТРУКТУРОВАНОМУ JSON форматі, використовуючи УКРАЇНСЬКУ мову.` }]
-                    },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                "name": { "type": "STRING", "description": "Назва або стиль ритму." },
-                                "bpm": { "type": "INTEGER", "description": "Приблизний темп у ударах на хвилину (ціле число)." },
-                                "description": { "type": "STRING", "description": "Короткий опис ритму та порада (українською)." }
-                            },
-                            "propertyOrdering": ["name", "bpm", "description"]
+            // 1. Створюємо список усіх ідеальних нот
+            const totalNotes = processedRhythm.map((note, index) => ({
+                id: index + 1,
+                drum: note.drum,
+                dropTime: note.time,
+                status: 'UNPLAYED', // Початковий статус
+                pressTime: null,
+                deviation: null,
+            }));
+            
+            // 2. Опрацьовуємо лог сесії, щоб оновити статус нот
+            sessionLog.forEach(logEntry => {
+                if (logEntry.result === 'CORRECT') {
+                    logEntry.hitNotes.forEach(hit => {
+                        const note = totalNotes.find(n => n.id === hit.id);
+                        if (note) {
+                            note.status = 'HIT';
+                            note.pressTime = logEntry.time;
+                            note.deviation = hit.deviation;
                         }
-                    }
-                };
-                
-                let maxRetries = 3;
-                let currentRetry = 0;
-                
-                while (currentRetry < maxRetries) {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
                     });
-
-                    if (response.status === 429 && currentRetry < maxRetries - 1) {
-                        const delay = Math.pow(2, currentRetry) * 1000;
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        currentRetry++;
-                        continue;
+                } else if (logEntry.result === 'MISSED_NOTE') {
+                    const note = totalNotes.find(n => n.id === logEntry.noteId);
+                    if (note) {
+                        note.status = 'MISSED';
                     }
-                    if (!response.ok) {
-                        throw new Error(`API error: ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-                    const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    const parsed = JSON.parse(jsonText);
-                    
-                    elements.recordModal.querySelector('#analysis-name').textContent = parsed.name || 'Не визначено';
-                    elements.recordModal.querySelector('#analysis-bpm').textContent = parsed.bpm ? `${parsed.bpm} BPM` : 'Не визначено';
-                    elements.recordModal.querySelector('#analysis-description').textContent = parsed.description || 'Не вдалося створити опис.';
-                    
-                    break; 
                 }
-
-            } catch (error) {
-                console.error("Gemini Analysis Error:", error);
-                elements.recordModal.querySelector('#analysis-description').textContent = `Помилка аналізу: ${error.message}.`;
-            } finally {
-                analyzeBtn.disabled = false;
-                analyzeBtn.textContent = '✨ Аналізувати ритм (Gemini AI)';
-            }
-        }
-
-
-        // **********************************************
-        // * ЛОГІКА РЕЖИМУ РОЗРОБНИКА *
-        // **********************************************
-
-        function openRecordModal() {
-            if (!soundsReady) {
-                 elements.messageDisplay.textContent = '❌ Зачекайте завантаження ударних звуків.';
-                 return;
-            }
-            
-            // Встановлюємо початкові стани
-            elements.recordStartBtn.disabled = true;
-            elements.recordStopBtn.disabled = true;
-            elements.recordModal.querySelector('#analyze-rhythm-btn').disabled = true;
-            elements.recordMessage.textContent = 'Оберіть трек і натисніть "Почати запис".';
-            elements.recordMessage.classList.remove('text-red-500');
-            elements.recordMessage.classList.add('text-slate-600');
-            elements.recordResultContainer.classList.add('hidden');
-            elements.analysisOutput.classList.add('hidden');
-            
-            // Оскільки soundsReady вже true (ударні завантажено),
-            // ми дозволяємо почати запис, щоб ініціювати відтворення треку.
-            elements.recordStartBtn.disabled = false;
-
-            elements.recordModal.classList.add('visible');
-        }
-
-        function startRecordMode() {
-            const selectedTrackBtn = document.querySelector('.record-track-btn.active');
-            if (!selectedTrackBtn) return;
-            
-            const trackId = selectedTrackBtn.dataset.trackId;
-            recordAudio = elements[trackId];
-
-            if (!soundsReady) return;
-
-            // **********************************************
-            // * АКТИВАЦІЯ РЕЖИМУ ТА ЗАПУСК МУЗИКИ *
-            // **********************************************
-            
-            // 1. АКТИВУЄМО РЕЖИМ ЗАПИСУ НЕМЕДЛЕНО
-            isRecording = true;
-            recordedHits = [];
-            recordStartTime = performance.now();
-            
-            // 2. ВІДОБРАЖЕННЯ СТАНУ
-            elements.recordMessage.textContent = '🔴 ЙДЕ ЗАПИС. Набивайте ритм...';
-            elements.recordMessage.classList.remove('text-red-500');
-            elements.recordMessage.classList.add('text-green-600'); 
-            elements.recordStartBtn.disabled = true;
-            elements.recordStopBtn.disabled = false;
-            elements.recordResultContainer.classList.add('hidden');
-            elements.analysisOutput.classList.add('hidden'); // Hide previous analysis
-            
-            // 3. ЗАПУСК АУДІО
-            audioContext.resume().then(() => {
-                recordAudio.currentTime = 0;
-                recordAudio.play().catch(error => {
-                    // Якщо аудіо БЛОКУЄТЬСЯ
-                    console.error("Помилка відтворення аудіо при записі:", error);
-                    elements.recordMessage.textContent = '⚠️ АУДІО БЛОКУВАННЯ. Натисни "Почати запис" ще раз...';
-                    elements.recordMessage.classList.remove('text-green-600');
-                    elements.recordMessage.classList.add('text-red-500');
-                    
-                    // Розблоковуємо кнопку для повторної спроби
-                    elements.recordStartBtn.disabled = false;
-                    elements.recordStopBtn.disabled = true;
-                    isRecording = false; 
-                });
-
-                // Автоматична зупинка запису при завершенні треку
-                recordAudio.onended = () => {
-                    stopRecordMode();
-                };
             });
-        }
-        
-        function stopRecordMode() {
-            if (!isRecording && !recordAudio) return; // Якщо вже зупинено або не було запуску
 
-            if (recordAudio) {
-                recordAudio.pause();
-                recordAudio.currentTime = 0;
-                recordAudio.onended = null;
+            // 3. Візуалізуємо результати
+            totalNotes.forEach(note => {
+                let statusText = '';
+                let className = '';
+                let detail = '';
+                // dropTime - це час від початку треку
+                const seconds = Math.floor(note.dropTime / 1000);
+                const milliseconds = note.dropTime % 1000;
+                const timeStr = `${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(3, '0')}`;
+
+
+                if (note.status === 'HIT') {
+                    className = 'hit-correct';
+                    statusText = `✅ Успіх (${note.drum} @ ${timeStr})`;
+                    const dev = note.deviation;
+                    detail = `Відхилення: ${dev.toFixed(2)} мс. (${dev > 0 ? 'Пізно' : 'Рано'})`;
+                } else if (note.status === 'MISSED') {
+                    className = 'hit-missed';
+                    statusText = `❌ Пропущено (${note.drum} @ ${timeStr})`;
+                } else if (note.status === 'UNPLAYED') {
+                    // Це ноти, які мали бути зіграні, але не були ні натиснуті, ні пропущені
+                    // Це зазвичай не трапляється, якщо ритм повністю зіграний
+                    className = 'hit-missed'; 
+                    statusText = `❓ Пропущено (Таймер закінчився) (${note.drum} @ ${timeStr})`;
+                }
+                
+                content.innerHTML += `
+                    <div class="stats-item ${className}">
+                        ${statusText}
+                        ${detail ? `<p class="timing-detail">${detail}</p>` : ''}
+                    </div>
+                `;
+            });
+            
+            // 4. Додаємо промахи по клавішах (коли гравець натиснув, але не було ноти в вікні)
+            const missedKeys = sessionLog.filter(log => log.result === 'MISSED_KEY');
+            if (missedKeys.length > 0) {
+                 content.innerHTML += `<h3 class="text-sm font-bold text-orange-600 mt-4 border-t pt-2">Промахи клавішами (Натиснув, але нот не було):</h3>`;
+                 missedKeys.forEach(log => {
+                    const totalMs = log.time;
+                    const seconds = Math.floor(totalMs / 1000);
+                    const milliseconds = totalMs % 1000;
+                    const timeStr = `${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(3, '0')}`;
+
+                    content.innerHTML += `
+                        <div class="stats-item key-miss">
+                            ⚠️ Промах клавішею: ${log.drum} @ ${timeStr}
+                        </div>
+                    `;
+                 });
             }
-            
-            isRecording = false;
-            
-            // ОНОВЛЕННЯ ВІДОБРАЖЕННЯ МОДАЛКИ
-            elements.recordMessage.textContent = '✅ ЗАПИС ЗБЕРЕЖЕНО. Скопіюйте ритм.';
-            elements.recordMessage.classList.remove('text-green-600', 'text-red-500');
-            elements.recordMessage.classList.add('text-slate-800');
 
-            elements.recordStartBtn.disabled = false;
-            elements.recordStopBtn.disabled = true;
-            
-            generateRhythmOutput(); // ГЕНЕРУЄМО ТАЙМІНГИ В ТЕКСТОВЕ ПОЛЕ
-
-            // Скидаємо recordAudio для коректного вибору треку наступного разу
-            recordAudio = null; 
-            
-            // Активуємо кнопку аналізу, якщо є записані удари
-            if (recordedHits.length > 0) {
-                 elements.recordModal.querySelector('#analyze-rhythm-btn').disabled = false;
-            }
+            elements.statsModal.classList.add('visible');
         }
-
-        function handleRecordTrackSelection(event) {
-            const target = event.target.closest('.record-track-btn');
-            if (!target || isRecording) return; 
-
-            // Скидаємо всі стилі
-            document.querySelectorAll('.record-track-btn').forEach(btn => btn.classList.remove('active'));
-            
-            // Встановлюємо активний стиль
-            target.classList.add('active');
-            
-            // Перевіряємо готовність обраного треку
-            const trackId = target.dataset.trackId;
-            if (soundsReady) { // Перевіряємо, чи завантажено все
-                elements.recordStartBtn.disabled = false;
-                elements.recordMessage.textContent = 'Трек готовий. Натисніть "Почати запис".';
-                elements.recordMessage.classList.remove('text-red-500');
-                elements.recordMessage.classList.add('text-slate-600');
-            }
-            elements.recordResultContainer.classList.add('hidden');
-            elements.analysisOutput.classList.add('hidden');
-        }
-
 
         function setupEventListeners() {
-            // ОБРОБНИКИ ДЛЯ ОСНОВНОГО РЕЖИМУ
+            const audio = elements.backgroundMusic;
+            let audioLoadInterval;
+            let audioLoadTimeout;
+
+            const onAudioReady = () => {
+                if (trackDuration !== GAME_DURATION_SECONDS) return;
+                
+                checkReadyState();
+                clearInterval(audioLoadInterval);
+                clearTimeout(audioLoadTimeout);
+            };
+
+            audio.addEventListener('loadedmetadata', onAudioReady);
+            audio.addEventListener('canplaythrough', onAudioReady);
+            
+            audio.addEventListener('error', () => {
+                elements.messageDisplay.textContent = "Помилка завантаження аудіо.";
+                elements.startButton.disabled = true;
+                clearInterval(audioLoadInterval);
+                clearTimeout(audioLoadTimeout);
+            });
+
+            audioLoadInterval = setInterval(() => {
+                if (audio.readyState > 2 && trackDuration === GAME_DURATION_SECONDS) { 
+                    onAudioReady();
+                }
+            }, 500);
+
+            audioLoadTimeout = setTimeout(() => {
+                clearInterval(audioLoadInterval);
+                if (!(trackDuration > 0)) {
+                    console.warn(`Аудіо не завантажилось, встановлено ${GAME_DURATION_SECONDS} сек.`);
+                    trackDuration = GAME_DURATION_SECONDS;
+                    timeLeft = trackDuration;
+                    updateTimerDisplay();
+                    checkReadyState();
+                }
+            }, 10000); 
+
+            // **********************************************
+            // * НОВІ КНОПКИ СТАТИСТИКИ *
+            // **********************************************
+            elements.showStatsBtn.addEventListener('click', () => {
+                 elements.saveScoreModal.classList.remove('visible'); // Закриваємо модалку збереження
+                 showSessionStatistics(); // Відкриваємо модалку статистики
+            });
+            elements.closeStatsBtn.addEventListener('click', () => {
+                elements.statsModal.classList.remove('visible');
+                elements.saveScoreModal.classList.add('visible'); // Повертаємо модалку збереження
+            });
+            // **********************************************
+
             elements.startButton.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') {
                      audioContext.resume().then(() => { if(!gameActive && soundsReady) startGame(); });
@@ -1649,60 +1003,15 @@
                 }
             });
             
-            elements.demoButton.addEventListener('click', startDemoMode); // NEW DEMO EVENT LISTENER
             elements.restartButton.addEventListener('click', resetGame); 
-            elements.recordModal.querySelector('#analyze-rhythm-btn').addEventListener('click', analyzeRhythm);
 
-
-            // **********************************************
-            // * ОБРОБНИКИ ЛІДЕРБОРДУ *
-            // **********************************************
             elements.leaderboardBtn.addEventListener('click', showLeaderboard);
             elements.backToGameBtn.addEventListener('click', () => {
                 elements.leaderboardView.classList.add('hidden');
                 elements.gameView.classList.remove('hidden');
-                resetGame(); // Скидання стану гри після повернення
             });
-            // **********************************************
-            
             elements.saveScoreBtn.addEventListener('click', saveScore);
             elements.cancelSaveBtn.addEventListener('click', resetGame);
-            elements.showStatsBtn.addEventListener('click', showSessionStatistics);
-            elements.closeStatsBtn.addEventListener('click', () => {
-                elements.statsModal.classList.remove('visible');
-                elements.saveScoreModal.classList.add('visible');
-            });
-
-
-            elements.styleControls.querySelectorAll('.control-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    elements.styleControls.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                    setCurrentExercise(e.currentTarget.dataset.style);
-                });
-            });
-
-            // **********************************************
-            // * ОБРОБНИКИ ДЛЯ РЕЖИМУ РОЗРОБНИКА *
-            // **********************************************
-            
-            elements.recordModeBtn.addEventListener('click', () => {
-                // Вимикаємо основну гру, якщо вона активна
-                if (gameActive) endGame();
-                if (isDemoMode) endDemoMode(); // End demo mode if active
-                openRecordModal();
-            });
-
-            elements.recordTrackControls.addEventListener('click', handleRecordTrackSelection);
-            elements.recordStartBtn.addEventListener('click', startRecordMode);
-            elements.recordStopBtn.addEventListener('click', stopRecordMode);
-
-            elements.recordCloseBtn.addEventListener('click', () => {
-                stopRecordMode(); 
-                elements.recordModal.classList.remove('visible');
-                resetGame(); 
-            });
-            // **********************************************
 
             Object.values(drumPads).forEach(pad => {
                 pad.addEventListener('click', () => handleKeyPress(pad.dataset.drum));
