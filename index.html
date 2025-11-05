@@ -665,6 +665,64 @@
         // **********************************************
 
         // **********************************************
+        // * ФУНКЦІЇ ДЛЯ ЗАВАНТАЖЕННЯ АУДІО (ФІНАЛЬНЕ ВИПРАВЛЕННЯ MOBILE SAFARI) *
+        // **********************************************
+        
+        async function loadSound(name, url) {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            audioBuffers[name] = await audioContext.decodeAudioData(arrayBuffer);
+        }
+
+        function setButtonsState(isDisabled, message) {
+            elements.startButton.disabled = isDisabled;
+            elements.demoButton.disabled = isDisabled;
+            elements.messageDisplay.textContent = message;
+            // Додаткова візуальна перевірка готовності
+            if (!isDisabled) {
+                 elements.messageDisplay.classList.remove('text-slate-600');
+                 elements.messageDisplay.classList.add('text-green-600');
+            } else {
+                 elements.messageDisplay.classList.remove('text-green-600');
+                 elements.messageDisplay.classList.add('text-slate-600');
+            }
+        }
+
+        async function loadAllSounds() {
+            setButtonsState(true, "Завантаження... (барабанні звуки)");
+            
+            try {
+                // 1. Завантаження ударних звуків (Web Audio API)
+                const drumPromises = Object.entries(drumSounds).map(([name, url]) => loadSound(name, url));
+                await Promise.all(drumPromises);
+
+                soundsReady = true;
+                
+                // 2. Ініціалізація HTML Audio елементів (вони завантажуються ледачо)
+                // Ми не чекаємо їх тут, але перевіряємо їх перед початком гри
+                
+                // 3. Спроба встановити тривалість для відображення таймера
+                if (elements.backgroundMusic1.readyState >= 3) {
+                     GAME_DURATION_SECONDS_MAP['exercise1'] = elements.backgroundMusic1.duration || 47;
+                }
+                 if (elements.backgroundMusic2.readyState >= 3) {
+                     GAME_DURATION_SECONDS_MAP['exercise2'] = elements.backgroundMusic2.duration || 20;
+                }
+                
+                setButtonsState(false, "Готовий? Натисни 'Почати'");
+                
+            } catch (error) {
+                console.error("Audio loading error:", error);
+                setButtonsState(true, `Помилка завантаження аудіо (Барабани). Спробуй перезавантажити.`);
+            }
+        }
+        
+        // **********************************************
+        // * КІНЕЦЬ: ВИПРАВЛЕННЯ MOBILE SAFARI *
+        // **********************************************
+        
+        
+        // **********************************************
         // * ФУНКЦІЯ КВАНТИЗАЦІЇ РИТМУ *
         // **********************************************
         function quantizeRhythm(rhythm) {
@@ -689,8 +747,7 @@
                 
                 return {
                     drum: note.drum,
-                    // Час СПАВНУ = Квантований час удару + (час першого спавну) - (час першого удару)
-                    // Тобто, просто коригуємо час удару
+                    // Час СПАВНУ = Квантований час удару
                     time: quantizedHitTime,
                 };
             }).filter(note => note.time >= 0); // Фільтруємо негативні, якщо вони з'явилися
@@ -699,10 +756,8 @@
             // Тепер ми повинні додати компенсацію NEW_FALL_SPEED_MS, як це робиться у prepareRhythmForGame
             const finalDemoRhythm = quantizedRhythm.map(note => ({
                 drum: note.drum,
-                // Час СПАВНУ = Квантований час удару + (перший таймкод - час падіння)
-                // Оскільки ми вже відкоригували на 3577 мс у prepareRhythmForGame,
-                // і квантований ритм починається з 0, ми просто додаємо час падіння для коректної синхронізації спавну.
-                time: note.time + (rhythm[0].time - NEW_FALL_SPEED_MS)
+                // Час СПАВНУ = Квантований час удару + (час першого удару - час падіння)
+                time: note.time + (firstHitTime - NEW_FALL_SPEED_MS)
             }));
             
             return finalDemoRhythm;
@@ -739,63 +794,6 @@
         }
 
         // **********************************************
-
-        async function loadSound(name, url) {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            audioBuffers[name] = await audioContext.decodeAudioData(arrayBuffer);
-        }
-
-        function updateReadyState(trackId, ready) {
-            bgmReady[trackId] = ready;
-            
-            // Якщо всі ресурси готові
-            const allReady = Object.values(bgmReady).every(r => r === true) && Object.keys(drumSounds).every(k => audioBuffers[k]);
-            
-            if (allReady) {
-                soundsReady = true;
-                elements.startButton.disabled = false;
-                elements.demoButton.disabled = false; // ENABLE DEMO BUTTON
-                elements.messageDisplay.textContent = "Готовий? Натисни 'Почати'";
-            } else {
-                elements.startButton.disabled = true;
-                elements.demoButton.disabled = true;
-                elements.messageDisplay.textContent = `Завантаження... (Треки: ${Object.values(bgmReady).filter(r => r).length}/2)`;
-            }
-        }
-        
-        function setupAudioListeners(trackId) {
-            const audio = elements[trackId];
-            
-            const onReady = () => {
-                 updateReadyState(trackId, true);
-            };
-
-            audio.addEventListener('loadeddata', onReady);
-            audio.addEventListener('error', () => {
-                elements.messageDisplay.textContent = `Помилка завантаження треку для Вправи ${trackId.slice(-1)}. Перевірте URL.`;
-                console.error(`Помилка завантаження треку для Вправи ${trackId.slice(-1)}. Перевірте URL.`, audio.error);
-                updateReadyState(trackId, false); // Помилка, позначаємо як не готовий
-            });
-            
-            // Перша перевірка, якщо трек уже був у кеші
-            if (audio.readyState >= 2) onReady();
-        }
-
-
-        async function loadAllSounds() {
-            try {
-                const drumPromises = Object.entries(drumSounds).map(([name, url]) => loadSound(name, url));
-                await Promise.all(drumPromises);
-                
-                setupAudioListeners('backgroundMusic1');
-                setupAudioListeners('backgroundMusic2');
-                
-            } catch (error) {
-                elements.messageDisplay.textContent = "Помилка завантаження ударних звуків.";
-                console.error("Audio loading error:", error);
-            }
-        }
         
         function playSound(name) {
             if (!soundsReady || !audioBuffers[name]) return;
@@ -823,8 +821,9 @@
             if (!gameActive) {
                 elements.scoreDisplay.textContent = 0;
                 elements.messageDisplay.textContent = "Готовий? Натисни 'Почати'";
-                elements.startButton.disabled = !soundsReady || !bgmReady[currentBGM.id];
-                elements.demoButton.disabled = !soundsReady || !bgmReady[currentBGM.id];
+                // Перевіряємо готовність через загальний прапорець soundsReady
+                elements.startButton.disabled = !soundsReady; 
+                elements.demoButton.disabled = !soundsReady;
             }
         }
         
@@ -896,10 +895,15 @@
             elements.backgroundMusic1.loop = false; 
             elements.backgroundMusic2.loop = false; 
             
-            setCurrentExercise(currentExercise); // Встановити початкову вправу
-
+            // Встановлення позиції синьої лінії
+            setIdealHitLinePosition(); 
+            
+            // Завантаження всіх ресурсів
             await loadAllSounds();
-            setIdealHitLinePosition(); // Встановлення позиції синьої лінії
+            
+            // Встановити початкову вправу після завантаження
+            setCurrentExercise(currentExercise); 
+
             setupEventListeners();
         }
         
@@ -910,14 +914,27 @@
         }
         
         function startGame() {
-            if (!soundsReady || !bgmReady[currentBGM.id]) return;
+            if (!soundsReady || processedRhythm.length === 0) {
+                 elements.messageDisplay.textContent = '❌ Аудіо ще завантажується. Зачекайте.';
+                 return;
+            }
+
+            // ПЕРЕВІРКА ГОТОВНОСТІ ТРЕКУ ПЕРЕД ГРОЮ
+            if (currentBGM.readyState < 3) {
+                 elements.messageDisplay.textContent = '❌ Фоновий трек ще завантажується. Зачекайте кілька секунд.';
+                 currentBGM.load(); // Примусове завантаження
+                 return;
+            }
 
             // Reset demo mode flag
             isDemoMode = false;
             
             currentBGM.currentTime = 0;
-            currentBGM.play().catch(error => {
-                console.log("Автозапуск музики заблоковано. Запуститься після першого натискання.");
+            // Активація аудіоконтексту та відтворення
+            audioContext.resume().then(() => {
+                currentBGM.play().catch(error => {
+                    console.error("Автозапуск музики заблоковано:", error);
+                });
             });
 
             score = 0;
@@ -982,11 +999,17 @@
         }
         
         function startDemoMode() {
-            if (!soundsReady || !bgmReady[currentBGM.id]) {
-                // Якщо аудіо не готове, повідомляємо і не запускаємо
+            if (!soundsReady || processedRhythm.length === 0) {
                 elements.messageDisplay.textContent = '❌ Зачекайте завантаження треку.';
                 elements.messageDisplay.classList.add('text-red-500');
                 return;
+            }
+
+            // ПЕРЕВІРКА ГОТОВНОСТІ ТРЕКУ ПЕРЕД ДЕМО
+            if (currentBGM.readyState < 3) {
+                 elements.messageDisplay.textContent = '❌ Фоновий трек ще завантажується. Зачекайте кілька секунд.';
+                 currentBGM.load(); // Примусове завантаження
+                 return;
             }
 
             // Скидаємо гру на випадок, якщо вона була активна
@@ -996,8 +1019,10 @@
             gameActive = false; // Вимикаємо ігровий режим, щоб ігнорувати ввід користувача
 
             currentBGM.currentTime = 0;
-            currentBGM.play().catch(error => {
-                console.log("Автозапуск музики заблоковано в Демо режимі. Запуститься після першого натискання.");
+            audioContext.resume().then(() => {
+                currentBGM.play().catch(error => {
+                    console.error("Автозапуск музики заблоковано в Демо режимі:", error);
+                });
             });
 
             elements.startButton.disabled = true;
@@ -1091,8 +1116,8 @@
              elements.scoreDisplay.textContent = 0;
 
              // Reset buttons
-             elements.startButton.disabled = !bgmReady[currentBGM.id];
-             elements.demoButton.disabled = !bgmReady[currentBGM.id];
+             elements.startButton.disabled = !soundsReady;
+             elements.demoButton.disabled = !soundsReady;
              elements.restartButton.disabled = true;
              elements.startButton.textContent = 'Почати';
         }
@@ -1107,8 +1132,8 @@
             
             Object.values(drumPads).forEach(pad => pad.classList.remove('auto-flash'));
             
-            elements.startButton.disabled = !bgmReady[currentBGM.id];
-            elements.demoButton.disabled = !bgmReady[currentBGM.id]; // ENABLE DEMO BUTTON
+            elements.startButton.disabled = !soundsReady;
+            elements.demoButton.disabled = !soundsReady; // ENABLE DEMO BUTTON
             elements.startButton.textContent = 'Почати';
             elements.restartButton.disabled = true;
             
@@ -1150,9 +1175,8 @@
             // **********************************************
             // * ВИПРАВЛЕННЯ: ЗАБЕЗПЕЧУЄМО ДОСТУПНІСТЬ КНОПОК *
             // **********************************************
-            const isReady = soundsReady && bgmReady[currentBGM.id];
-            elements.startButton.disabled = !isReady;
-            elements.demoButton.disabled = !isReady;
+            elements.startButton.disabled = !soundsReady;
+            elements.demoButton.disabled = !soundsReady;
             elements.restartButton.disabled = true;
             // **********************************************
 
@@ -1378,7 +1402,9 @@
         async function analyzeRhythm() {
             const rawRhythm = elements.recordedRhythmOutput.value;
             if (!rawRhythm || rawRhythm.includes('Ударів не записано')) {
-                 alert('Спершу запишіть ритм, або вставте коректний масив таймкодів.');
+                 // Тут раніше була alert, але оскільки ми не використовуємо alert, просто виводимо повідомлення
+                 elements.recordMessage.textContent = 'Спершу запишіть ритм, або вставте коректний масив таймкодів.';
+                 elements.recordMessage.classList.add('text-red-500');
                  return;
             }
             
@@ -1466,7 +1492,10 @@
         // **********************************************
 
         function openRecordModal() {
-            if (!soundsReady) return;
+            if (!soundsReady) {
+                 elements.messageDisplay.textContent = '❌ Зачекайте завантаження ударних звуків.';
+                 return;
+            }
             
             // Встановлюємо початкові стани
             elements.recordStartBtn.disabled = true;
@@ -1478,17 +1507,9 @@
             elements.recordResultContainer.classList.add('hidden');
             elements.analysisOutput.classList.add('hidden');
             
-            // Перевірка, який трек активовано за замовчуванням
-            const defaultTrackBtn = document.querySelector('.record-track-btn.active');
-            if (defaultTrackBtn) {
-                 // Перевіряємо, чи завантажено початковий трек
-                const defaultTrackId = defaultTrackBtn.dataset.trackId;
-                if (bgmReady[defaultTrackId]) {
-                    elements.recordStartBtn.disabled = false;
-                } else {
-                    elements.recordMessage.textContent = `Трек ${defaultTrackId.slice(-1)} ще завантажується.`;
-                }
-            }
+            // Оскільки soundsReady вже true (ударні завантажено),
+            // ми дозволяємо почати запис, щоб ініціювати відтворення треку.
+            elements.recordStartBtn.disabled = false;
 
             elements.recordModal.classList.add('visible');
         }
@@ -1500,13 +1521,7 @@
             const trackId = selectedTrackBtn.dataset.trackId;
             recordAudio = elements[trackId];
 
-            if (!bgmReady[trackId]) {
-                elements.recordMessage.textContent = `❌ Трек ${trackId.slice(-1)} не завантажено. Спробуйте пізніше.`;
-                elements.recordMessage.classList.remove('text-slate-600');
-                elements.recordMessage.classList.add('text-red-500');
-                elements.recordStartBtn.disabled = true; 
-                return;
-            }
+            if (!soundsReady) return;
 
             // **********************************************
             // * АКТИВАЦІЯ РЕЖИМУ ТА ЗАПУСК МУЗИКИ *
@@ -1591,14 +1606,9 @@
             
             // Перевіряємо готовність обраного треку
             const trackId = target.dataset.trackId;
-            if (bgmReady[trackId]) {
+            if (soundsReady) { // Перевіряємо, чи завантажено все
                 elements.recordStartBtn.disabled = false;
                 elements.recordMessage.textContent = 'Трек готовий. Натисніть "Почати запис".';
-                elements.recordMessage.classList.remove('text-red-500');
-                elements.recordMessage.classList.add('text-slate-600');
-            } else {
-                elements.recordStartBtn.disabled = true;
-                elements.recordMessage.textContent = `Трек ${trackId.slice(-1)} ще завантажується.`;
                 elements.recordMessage.classList.remove('text-red-500');
                 elements.recordMessage.classList.add('text-slate-600');
             }
@@ -1608,8 +1618,6 @@
 
 
         function setupEventListeners() {
-            // ... (обробники audio loading - без змін)
-
             // ОБРОБНИКИ ДЛЯ ОСНОВНОГО РЕЖИМУ
             elements.startButton.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') {
@@ -1625,7 +1633,7 @@
 
 
             // **********************************************
-            // * ВИПРАВЛЕННЯ: ОБРОБНИКИ ЛІДЕРБОРДУ *
+            // * ОБРОБНИКИ ЛІДЕРБОРДУ *
             // **********************************************
             elements.leaderboardBtn.addEventListener('click', showLeaderboard);
             elements.backToGameBtn.addEventListener('click', () => {
