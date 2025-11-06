@@ -223,10 +223,10 @@
     </style>
 </head>
 <body>
-    <!-- Трек 1: rnb (Виправлений URL) -->
-    <audio id="backgroundMusic1" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/main/background_rnb.mp3" preload="auto"></audio>
-    <!-- Трек 2: pop (Виправлений URL) -->
-    <audio id="backgroundMusic2" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/2439dfdfec5ffcc9bfca7004ab7bac7f36f7c6e4/background_pop_full.mp3" preload="auto"></audio>
+    <!-- ТЕПЕР backgroundMusic1 ЦЕ background_rnb2.mp3 (КОРОТКИЙ ТРЕК) -->
+    <audio id="backgroundMusic1" src="https://github.com/max-vorozhko/rankova_studio_drum_falling_notes/blob/main/background_rnb2.mp3?raw=true" preload="auto"></audio>
+    <!-- ТЕПЕР backgroundMusic2 ЦЕ background_rnb.mp3 (ДОВГИЙ ТРЕК) -->
+    <audio id="backgroundMusic2" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/main/background_rnb.mp3" preload="auto"></audio>
 
     <div class="game-container">
         <!-- Game View -->
@@ -311,6 +311,7 @@
                     <button id="save-score-btn" class="pro-button flex-1 text-sm">Зберегти</button>
                     <button id="cancel-save-btn" class="pro-button flex-1 text-sm" style="background-color:#f1f5f9; color:#475569;">Пропустити</button>
                 </div>
+                <!-- Кнопка "Показати статистику" тепер працюватиме -->
                 <button id="show-stats-btn" class="pro-button w-full mt-2 text-sm" style="background-color:#475569; color:#fff;">Показати статистику</button>
             </div>
         </div>
@@ -394,12 +395,58 @@
         };
         
         // **********************************************
-        // * РИТМИ ДЛЯ ВПРАВ *
+        // * РИТМИ ДЛЯ ВПРАВ (ТЕПЕР ВОНИ ПОМІНЯНІ МІСЦЯМИ) *
+        // * exercise1 = старий exercise2 (короткий rnb2)
+        // * exercise2 = старий exercise1 (довгий rnb)
         // **********************************************
         const rhythmPatterns = {
             exercise1: [
-                // ОНОВЛЕНИЙ РИТМ ВПРАВИ 1 З ВАШИМИ ТАЙМКОДАМИ
-                // ПРИМІТКА: Ці таймкоди будуть скориговані в коді, щоб перший удар відбувся одразу.
+                // ВПРАВА 1 (НОВИЙ КОНТЕНТ: rnb2.mp3)
+                { time: 3790, drum: 'kick' },
+                { time: 4270, drum: 'snare' },
+                { time: 4760, drum: 'kick' },
+                { time: 5240, drum: 'snare' },
+                { time: 5740, drum: 'kick' },
+                { time: 6220, drum: 'snare' },
+                { time: 6710, drum: 'kick' },
+                { time: 7190, drum: 'snare' },
+                { time: 7680, drum: 'kick' },
+                { time: 8160, drum: 'snare' },
+                { time: 8660, drum: 'kick' },
+                { time: 9140, drum: 'snare' },
+                { time: 9630, drum: 'kick' },
+                { time: 10110, drum: 'snare' },
+                { time: 10600, drum: 'kick' },
+                { time: 11080, drum: 'snare' },
+                { time: 11570, drum: 'kick' },
+                { time: 12050, drum: 'snare' },
+                { time: 12540, drum: 'kick' },
+                { time: 13020, drum: 'snare' },
+                { time: 13510, drum: 'kick' },
+                { time: 13990, drum: 'snare' },
+                { time: 14480, drum: 'kick' },
+                { time: 14960, drum: 'snare' },
+                { time: 15450, drum: 'kick' },
+                { time: 15930, drum: 'snare' },
+                { time: 16420, drum: 'kick' },
+                { time: 16900, drum: 'snare' },
+                { time: 17390, drum: 'kick' },
+                { time: 17870, drum: 'snare' },
+                { time: 18360, drum: 'kick' },
+                { time: 18840, drum: 'snare' },
+                { time: 19330, drum: 'kick' },
+                { time: 19810, drum: 'snare' },
+                { time: 20300, drum: 'kick' },
+                { time: 20780, drum: 'snare' },
+                { time: 21270, drum: 'kick' },
+                { time: 21750, drum: 'snare' },
+                { time: 22240, drum: 'kick' },
+                { time: 22720, drum: 'snare' },
+                { time: 23210, drum: 'kick' },
+                { time: 23690, drum: 'snare' }
+            ],
+            exercise2: [
+                // ВПРАВА 2 (СТАРИЙ КОНТЕНТ: rnb.mp3)
                 { time: 3577, drum: 'kick' },
                 { time: 4109, drum: 'snare' },
                 { time: 4734, drum: 'kick' },
@@ -500,28 +547,6 @@
                 { time: 45740, drum: 'kick' },
                 { time: 46025, drum: 'kick' },
                 { time: 46304, drum: 'snare' }
-            ],
-            exercise2: [
-                { time: 0, drum: 'kick' }, { time: 480, drum: 'snare' }, 
-                { time: 960, drum: 'kick' }, { time: 1440, drum: 'snare' }, 
-                { time: 1920, drum: 'kick' }, { time: 2160, drum: 'kick' }, { time: 2400, drum: 'snare' }, 
-                { time: 2880, drum: 'kick' }, { time: 3360, drum: 'snare' }, 
-                { time: 3840, drum: 'kick' }, { time: 4080, drum: 'kick' }, { time: 4320, drum: 'snare' }, 
-                { time: 4800, drum: 'kick' }, { time: 5280, drum: 'snare' }, 
-                { time: 5760, drum: 'kick' }, { time: 6240, drum: 'snare' }, 
-                { time: 6720, drum: 'kick' }, { time: 6960, drum: 'kick' }, { time: 7200, drum: 'snare' }, 
-                { time: 7680, drum: 'kick' }, { time: 8160, drum: 'snare' }, 
-                { time: 8640, drum: 'kick' }, { time: 8880, drum: 'kick' }, { time: 9120, drum: 'snare' },
-                { time: 9600, drum: 'kick' }, { time: 10080, drum: 'snare' },
-                { time: 10560, drum: 'kick' }, { time: 11040, drum: 'snare' },
-                { time: 11520, drum: 'kick' }, { time: 12000, drum: 'snare' },
-                { time: 12480, drum: 'kick' }, { time: 12960, drum: 'snare' },
-                { time: 13440, drum: 'kick' }, { time: 13920, drum: 'snare' },
-                { time: 14400, drum: 'kick' }, { time: 14880, drum: 'snare' },
-                { time: 15360, drum: 'kick' }, { time: 15600, drum: 'kick' }, { time: 15840, drum: 'snare' },
-                { time: 16320, drum: 'kick' }, { time: 16800, drum: 'snare' },
-                { time: 17280, drum: 'kick' }, { time: 17760, drum: 'snare' },
-                { time: 18240, drum: 'kick' }, { time: 18480, drum: 'kick' }, { time: 18720, drum: 'snare' }
             ]
         };
         // **********************************************
@@ -545,7 +570,9 @@
             cancelSaveBtn: document.getElementById('cancel-save-btn'),
             laneContainer: document.querySelector('.lane-container'),
             drumPadContainer: document.getElementById('drum-pad-container'),
+            // backgroundMusic1 ТЕПЕРЬ background_rnb2.mp3
             backgroundMusic1: document.getElementById('backgroundMusic1'),
+            // backgroundMusic2 ТЕПЕР background_rnb.mp3
             backgroundMusic2: document.getElementById('backgroundMusic2'),
             restartButton: document.getElementById('restart-button'), 
             beatIndicator: document.getElementById('beat-indicator'),
@@ -556,7 +583,7 @@
             styleControls: document.getElementById('style-controls'),
 
             // Елементи режиму запису
-            recordModeBtn: document.getElementById('record-mode-btn'),
+            recordModeBtn: document.getElementById('record-mode-btn'), // <--- ВІДПОВІДНИЙ ЕЛЕМЕНТ
             recordModal: document.getElementById('record-modal'),
             recordMessage: document.getElementById('record-message'),
             recordTrackControls: document.getElementById('record-track-controls'),
@@ -585,10 +612,14 @@
             originalPadClasses[key] = drumPads[key].className;
         });
 
+        // **********************************************
+        // * ТРИВАЛІСТЬ ТРЕКІВ (ПОМІНЯНА МІСЦЯМИ) *
+        // * exercise1 = 25s (rnb2.mp3)
+        // * exercise2 = 47s (rnb.mp3)
+        // **********************************************
         const GAME_DURATION_SECONDS_MAP = {
-            // Встановлюємо максимальну очікувану тривалість. Фактична буде взята з аудіо.
-            'exercise1': 47,
-            'exercise2': 20, 
+            'exercise1': 25, 
+            'exercise2': 47, 
         };
         
         // **********************************************
@@ -638,7 +669,7 @@
         let notesOnScreen = [];
         let noteIdCounter = 0; 
         let gameStartTime = 0; 
-        let sessionLog = []; 
+        let sessionLog = []; // Журнал ігрової сесії для статистики
         const BPM = 100; // Базовий BPM для квантизації
         const BEAT_INTERVAL = (60 / BPM) * 1000; 
         
@@ -684,6 +715,16 @@
         function setButtonsState(isDisabled, message) {
             elements.startButton.disabled = isDisabled;
             elements.demoButton.disabled = isDisabled;
+            elements.recordModeBtn.disabled = isDisabled; // <--- Керування станом кнопки режиму запису
+            
+            // --- ЛОГУВАННЯ ДЛЯ ПЕРЕВІРКИ СТАНУ ---
+            if (!isDisabled) {
+                console.log("✅ Кнопки активовано (soundsReady=true). Режим запису повинен працювати.");
+            } else {
+                 console.log("⏳ Кнопки деактивовано (Завантаження).");
+            }
+            // --- КІНЕЦЬ ЛОГУВАННЯ ---
+
             elements.messageDisplay.textContent = message;
             // Додаткова візуальна перевірка готовності
             if (!isDisabled) {
@@ -819,7 +860,11 @@
             processedRhythm = prepareRhythmForGame(rhythmPatterns[exercise]); 
             trackDuration = GAME_DURATION_SECONDS_MAP[exercise];
             
-            // Встановлюємо активний BGM для гри
+            // **********************************************
+            // * ОНОВЛЕНО: currentBGM тепер залежить від НОВИХ АУДІО-ТЕГІВ *
+            // **********************************************
+            // backgroundMusic1 = rnb2.mp3
+            // backgroundMusic2 = rnb.mp3
             currentBGM = exercise === 'exercise1' ? elements.backgroundMusic1 : elements.backgroundMusic2;
             
             // Оновлюємо відображення таймера
@@ -833,6 +878,7 @@
                 // Перевіряємо готовність через загальний прапорець soundsReady
                 elements.startButton.disabled = !soundsReady; 
                 elements.demoButton.disabled = !soundsReady;
+                elements.recordModeBtn.disabled = !soundsReady; // <--- КЕРУВАННЯ СТАНОМ
             }
         }
         
@@ -971,6 +1017,7 @@
             gameActive = true;
             elements.startButton.disabled = true;
             elements.demoButton.disabled = true; // DISABLE DEMO BUTTON IN GAME MODE
+            elements.recordModeBtn.disabled = true; // DISABLE RECORD MODE BUTTON IN GAME MODE
             elements.startButton.textContent = 'Гра триває...';
             elements.restartButton.disabled = false;
             elements.messageDisplay.textContent = 'Грай!';
@@ -1051,6 +1098,7 @@
 
             elements.startButton.disabled = true;
             elements.demoButton.disabled = true;
+            elements.recordModeBtn.disabled = true; // DISABLE RECORD MODE BUTTON IN DEMO MODE
             elements.restartButton.disabled = false;
             elements.messageDisplay.textContent = '🎶 Демонстрація ритму...';
             elements.scoreDisplay.textContent = 'DEMO';
@@ -1138,6 +1186,7 @@
              // Reset buttons
              elements.startButton.disabled = !soundsReady;
              elements.demoButton.disabled = !soundsReady;
+             elements.recordModeBtn.disabled = !soundsReady; // ENABLE RECORD MODE BUTTON
              elements.restartButton.disabled = true;
              elements.startButton.textContent = 'Почати';
         }
@@ -1155,6 +1204,7 @@
             
             elements.startButton.disabled = !soundsReady;
             elements.demoButton.disabled = !soundsReady; // ENABLE DEMO BUTTON
+            elements.recordModeBtn.disabled = !soundsReady; // ENABLE RECORD MODE BUTTON
             elements.startButton.textContent = 'Почати';
             elements.restartButton.disabled = true;
             
@@ -1199,6 +1249,7 @@
             // **********************************************
             elements.startButton.disabled = !soundsReady;
             elements.demoButton.disabled = !soundsReady;
+            elements.recordModeBtn.disabled = !soundsReady; // ENABLE RECORD MODE BUTTON
             elements.restartButton.disabled = true;
             // **********************************************
 
@@ -1273,16 +1324,96 @@
             });
         }
 
+        // **********************************************
+        // * ОНОВЛЕНА ФУНКЦІЯ: showSessionStatistics *
+        // **********************************************
         function showSessionStatistics() {
-            // ... (Функція showSessionStatistics - без змін)
+            elements.saveScoreModal.classList.remove('visible');
+            elements.statsModal.classList.add('visible');
+            
+            const content = elements.statsContent;
+            content.innerHTML = '';
+            
+            if (sessionLog.length === 0) {
+                content.innerHTML = '<p class="text-center text-slate-500 py-4">Журнал сесії порожній. (Можливо, ви не робили ударів)</p>';
+                return;
+            }
+            
+            // Заголовок
+            const title = document.createElement('p');
+            title.className = 'text-sm font-bold text-slate-700 mb-2 border-b border-slate-300 pb-1';
+            title.textContent = `Всього подій: ${sessionLog.length}`;
+            content.appendChild(title);
+
+            // Сортуємо лог за часом для коректного відображення
+            sessionLog.sort((a, b) => a.time - b.time);
+
+            sessionLog.forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'stats-item flex justify-between';
+                
+                const timeMs = log.time.toFixed(0);
+                const timeSec = (log.time / 1000).toFixed(2);
+                
+                let text = '';
+                let resultClass = '';
+                
+                if (log.type === 'keyPress') {
+                    if (log.result === 'CORRECT') {
+                        text = `✅ Влучання: ${log.drum.toUpperCase()}`;
+                        resultClass = 'hit-correct';
+                    } else { // MISSED_KEY
+                        text = `🟠 Промах клавішею: ${log.drum.toUpperCase()}`;
+                        resultClass = 'key-miss';
+                    }
+                } else if (log.type === 'missedNote') {
+                    text = `❌ Пропущена нота: ${log.drum.toUpperCase()}`;
+                    resultClass = 'hit-missed';
+                }
+
+                item.classList.add(resultClass);
+                item.innerHTML = `
+                    <span class="font-medium">${text}</span>
+                    <span class="timing-detail">${timeSec} с (${timeMs} мс)</span>
+                `;
+                content.appendChild(item);
+            });
         }
+        // **********************************************
         
+        // **********************************************
+        // * ОНОВЛЕНА ФУНКЦІЯ: handleMiss *
+        // **********************************************
         function handleMiss(note) {
-             // ... (Функція handleMiss - без змін)
+            animatePad(note.drum, 'hit-miss');
+            
+            // ДОДАНО ЛОГУВАННЯ ПРОПУЩЕНОЇ НОТИ
+            if (gameActive) {
+                sessionLog.push({
+                    type: 'missedNote',
+                    drum: note.drum,
+                    time: performance.now() - gameStartTime,
+                    result: 'MISSED',
+                });
+            }
         }
+        // **********************************************
         
         function animatePad(drumName, result) {
-            // ... (Функція animatePad - без змін)
+            const pad = drumPads[drumName];
+            if (!pad) return;
+
+            // Зберігаємо оригінальні класи (kick або snare)
+            const baseClasses = pad.classList.contains('kick') ? 'drum-pad kick' : 'drum-pad snare';
+            pad.className = `${baseClasses} playing`; // Start with base + playing
+
+            if (result) {
+                pad.classList.add(result); // Add 'hit-correct' або 'hit-miss'
+            }
+
+            setTimeout(() => {
+                pad.className = baseClasses; // Reset to original
+            }, 200);
         }
 
 
@@ -1667,7 +1798,10 @@
             
             elements.saveScoreBtn.addEventListener('click', saveScore);
             elements.cancelSaveBtn.addEventListener('click', resetGame);
-            elements.showStatsBtn.addEventListener('click', showSessionStatistics);
+            
+            // ДОДАНО: Обробник кнопки "Показати статистику"
+            elements.showStatsBtn.addEventListener('click', showSessionStatistics); 
+            
             elements.closeStatsBtn.addEventListener('click', () => {
                 elements.statsModal.classList.remove('visible');
                 elements.saveScoreModal.classList.add('visible');
