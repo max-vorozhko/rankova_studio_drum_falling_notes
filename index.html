@@ -1204,8 +1204,17 @@
         }
 
         function handleKeyPress(drumName) {
-            // Вимкнено логіку запису, оскільки customRhythm видалено
-            // if (isRecording) { ... }
+            // *** ОНОВЛЕННЯ: Додана логіка запису ритму ***
+            if (isRecording) {
+                const pressTime = performance.now();
+                const hitTime = Math.round(pressTime - recordStartTime);
+                recordedHits.push({ time: hitTime, drum: drumName });
+                animatePad(drumName, 'hit-correct'); // Візуальний відгук
+                playSound(drumName);
+                return; // Вихід, щоб не заважати ігровій логіці
+            }
+            // ********************************************
+
             if (isDemoMode) return; 
             if (!gameActive) { playSound(drumName); animatePad(drumName); return; }
             
@@ -1247,7 +1256,28 @@
             else { animatePad(drumName, 'hit-miss'); }
         }
         
-        // Видалено: generateRhythmOutput (не потрібна без customRhythm)
+        // *** НОВА ФУНКЦІЯ: Генерує вивід ритму для копіювання ***
+        function generateRhythmOutput() {
+            if (recordedHits.length === 0) {
+                 return "// Немає записаних ударів. Натискайте D (Kick) та F (Snare) під час запису.";
+            }
+        
+            // Форматуємо як масив об'єктів для копіювання в rhythmPatterns
+            const formattedHits = recordedHits.map(hit => 
+                `{ time: ${hit.time}, drum: '${hit.drum}' }`
+            ).join(', ');
+        
+            // Створюємо вивід з гарним форматуванням
+            const output = `
+// Отриманий ритм (${recordedHits.length} нот). Скопіюйте цей масив в rhythmPatterns:
+[
+    ${formattedHits}
+]
+            `.trim();
+        
+            return output;
+        }
+        // *********************************************************
 
         function openRecordModal() {
             resetGame(); elements.recordStartBtn.disabled = false; elements.recordStopBtn.disabled = true;
@@ -1270,9 +1300,17 @@
         function stopRecordMode() {
             if (!isRecording) return; 
             if (recordAudio) { recordAudio.pause(); recordAudio.currentTime = 0; recordAudio.onended = null; }
-            isRecording = false; elements.recordMessage.textContent = '✅ ЗАПИС ЗБЕРЕЖЕНО.'; elements.recordStartBtn.disabled = false; elements.recordStopBtn.disabled = true; 
-            // Виклик generateRhythmOutput тут не має сенсу, оскільки функція видалена.
-            // Залишимо лише повідомлення про запис.
+            isRecording = false; 
+
+            // *** ОНОВЛЕННЯ: Виклик функції виводу та відображення контейнера ***
+            const output = generateRhythmOutput();
+            elements.recordedRhythmOutput.value = output;
+            
+            elements.recordMessage.textContent = '✅ ЗАПИС ЗБЕРЕЖЕНО. Скопіюйте ритм.'; 
+            elements.recordResultContainer.classList.remove('hidden'); 
+            elements.recordStartBtn.disabled = false; 
+            elements.recordStopBtn.disabled = true;
+            // *****************************************************************
         }
         
         function handleRecordTrackSelection(event) {
