@@ -1,893 +1,1067 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Драм Тренажер: Падаючі Ноти | Rankova Studio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FAVICON -->
-    <link rel="icon" type="image/png" href="https://github.com/max-vorozhko/rankova_studio_drum_falling_notes/blob/main/favicon.png?raw=true">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            background-color: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        .game-container {
-            width: 100%;
-            max-width: 420px;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 12px;
-            position: relative;
-            touch-action: manipulation;
-        }
-        .main-view { transition: opacity 0.3s ease; }
-        .game-area { position: relative; height: 390px; }
-        .lane-container {
-            display: flex; justify-content: space-around; position: absolute;
-            top: 0; left: 0; right: 0; bottom: 80px; overflow: hidden;
-        }
-        .lane { width: 50%; border-left: 1px dashed #cbd5e1; border-right: 1px dashed #cbd5e1; position: relative; }
-        .lane:first-child { border-left: none; }
-        .lane:last-child { border-right: none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Драм Тренажер Rankova</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Драм тренажер Rankova Studio: падаючі ноти, три вправи, таблиця лідерів.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Jost:wght@500;600;700&display=swap">
+<style>
+/* Layout: one-screen phone app. Header, level picker with a one-bar score, HUD, the stage (highway onto a sunrise hit line), controls, footer links. */
+:root {
+  --paper: #fbfaf6;
+  --card: #ffffff;
+  --ink: #1d1b17;
+  --muted: #6b665b;
+  --line: #e6e1d4;
+  --sun: #f4cc35;
+  --sun-soft: #fbedb4;
+  --on-sun: #1d1b17;
+  --stage: #1c1a16;
+  --stage-ink: #f5f1e6;
+  --kick: #e4553d;
+  --snare: #5b58d8;
+  --perfect: #f4cc35;
+  --good: #3fb36b;
+  --ok: #8fb4d9;
+  --bad: #e05252;
+  --font-display: 'Jost', 'Futura', 'Century Gothic', system-ui, sans-serif;
+  --font-body: 'Golos Text', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #13120f; --card: #1c1b17; --ink: #f2eee4; --muted: #a59f92; --line: #2e2b25;
+    --sun-soft: #3a3218; --stage: #0d0c0a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #13120f; --card: #1c1b17; --ink: #f2eee4; --muted: #a59f92; --line: #2e2b25;
+  --sun-soft: #3a3218; --stage: #0d0c0a; color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+.app {
+  max-width: 480px; margin: 0 auto; min-height: 100%;
+  display: flex; flex-direction: column; gap: 12px;
+  padding-block: 12px 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.top img { height: 38px; width: auto; display: block; }
+:root[data-theme="dark"] .top img { filter: brightness(0) invert(.92); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .top img { filter: brightness(0) invert(.92); } }
+.top .name { text-align: right; }
+.eyebrow { font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.top h1 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.1; letter-spacing: .02em; }
+.back { color: var(--muted); font-size: 13px; text-decoration: none; }
+.back:hover { color: var(--ink); text-decoration: underline; }
 
-        .note {
-            position: absolute; top: -30px; width: 40px; height: 10px; 
-            border-radius: 5px; left: calc(50% - 20px);
-            transition: transform linear; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 5;
-        }
-        .note.kick { background-color: #dc2626; }
-        .note.snare { background-color: #4f46e5; }
-        .note.hit { opacity: 0; transition: opacity 0.1s ease-out; }
-        
-        #ideal-hit-line {
-            position: absolute; left: 0; right: 0; height: 4px;
-            background-color: #3b82f6; box-shadow: 0 0 8px #3b82f6;
-            z-index: 6; pointer-events: none;
-        }
-        
-        #beat-indicator {
-            width: 10px; height: 10px; border-radius: 50%;
-            background-color: #f1f5f9; transition: background-color 0.1s ease-in-out;
-        }
-        .beat-flash { background-color: #ffd200 !important; box-shadow: 0 0 8px #ffd200; }
-        
-        .drum-pad.auto-flash.kick { background-color: #f87171 !important; transform: scale(1.05); box-shadow: 0 0 10px #f87171; }
-        .drum-pad.auto-flash.snare { background-color: #818cf8 !important; transform: scale(1.05); box-shadow: 0 0 10px #f87171; }
+/* Level picker */
+.levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.lvl {
+  appearance: none; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  border-radius: 12px; padding: 8px 8px 9px; text-align: left; cursor: pointer; font: inherit; min-width: 0;
+}
+.lvl b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 14px; line-height: 1.15; }
+.lvl span { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lvl[aria-pressed="true"] { background: var(--sun); border-color: var(--sun); color: var(--on-sun); }
+.lvl[aria-pressed="true"] span { color: var(--on-sun); opacity: .75; }
+.lvl:disabled { opacity: .5; cursor: default; }
+.lvl:focus-visible, .btn:focus-visible, .pad:focus-visible, .seg button:focus-visible { outline: 3px solid var(--snare); outline-offset: 2px; }
 
-        #drum-pad-container {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 85px;
-            border-top: 4px solid #ffd200; box-shadow: 0 -5px 15px rgba(255, 210, 0, 0.2); 
-            display: flex; justify-content: space-around; align-items: center;
-            padding: 5px; background-color: #ffffff; z-index: 10; touch-action: manipulation; 
-        }
-        .drum-pad {
-            width: 64px; height: 64px; border-radius: 50%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out, box-shadow 0.1s ease;
-            color: white; font-weight: 700; touch-action: manipulation; 
-        }
-        .drum-pad .drum-name { font-size: 0.7rem; }
-        .drum-pad .key-hint { font-size: 0.6rem; opacity: 0.7; }
-        
-        .drum-pad.kick { background-color: #dc2626; }
-        .drum-pad.snare { background-color: #4f46e5; }
-        .drum-pad.playing { transform: scale(0.95); filter: brightness(1.2); }
-        .drum-pad.hit-correct { background-color: #22c55e !important; }
-        .drum-pad.hit-miss { background-color: #ef4444 !important; }
+.bar { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; display: grid; gap: 6px; }
+.bar-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.bar-head p { margin: 0; font-size: 13px; color: var(--muted); min-width: 0; }
+.score { display: grid; grid-template-columns: 52px repeat(8, 1fr); row-gap: 4px; align-items: center; }
+.score .lab { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+.score .cnt { text-align: center; font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--muted); }
+.score .cnt.on { color: var(--ink); }
+.score .cell { display: flex; justify-content: center; }
+.dot { width: 14px; height: 14px; border-radius: 50%; }
+.dot.k { background: var(--kick); }
+.dot.s { background: var(--snare); }
+.dot.off { width: 4px; height: 4px; background: var(--line); }
 
-        .pro-button {
-            transition: all 0.2s ease-in-out; border-radius: 8px;
-            padding: 6px 10px; font-size: 0.875rem; font-weight: 600; cursor: pointer;
-            background-color: #ffd200; color: #1e293b; border: none;
-            box-shadow: 0 4px rgba(0,0,0,0.1);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .pro-button:hover:not(:disabled) { background-color: #e6be00; }
-        .pro-button:disabled { opacity: 0.6; cursor: not-allowed; }
-        
-        .control-btn {
-            padding: 3px 6px; border-radius: 6px; border: 1px solid #cbd5e1;
-            color: #475569; background-color: #f1f5f9; font-weight: 500;
-            transition: all 0.2s ease; cursor: pointer; font-size: 0.65rem; white-space: nowrap;
-        }
-        .control-btn.active { background-color: #ffd200; color: #1e293b; border-color: #ffd200; }
-        .control-btn:not(.active):hover { background-color: #e2e8f0; }
+/* HUD */
+.hud { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px; min-width: 0; }
+.stat small { display: block; font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.stat output { display: block; font-family: var(--font-display); font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat output.hot { color: var(--kick); }
 
-        #leaderboard-style-controls .control-btn.active {
-            background-color: #4f46e5 !important; color: white !important; border-color: #4f46e5 !important;
-        }
+/* Stage */
+.stage { position: relative; height: clamp(320px, 52vh, 540px); border-radius: 18px; overflow: hidden; background: var(--stage); touch-action: manipulation; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pads { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+.pad {
+  appearance: none; border: 0; border-radius: 16px; height: 76px; color: #fff; cursor: pointer;
+  font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .03em;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: transform .06s ease, filter .06s ease;
+}
+.pad small { font-family: var(--font-body); font-weight: 500; font-size: 12px; opacity: .8; letter-spacing: .02em; }
+.pad kbd { font-family: var(--font-body); font-size: 11px; border: 1px solid rgba(255,255,255,.5); border-radius: 4px; padding: 0 5px; margin-left: 4px; }
+.pad.kick { background: var(--kick); }
+.pad.snare { background: var(--snare); }
+.pad.down { transform: scale(.96); filter: brightness(1.2); }
 
-        .modal-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center;
-            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-        }
-        .modal-overlay.visible { opacity: 1; pointer-events: auto; }
-        
-        #stats-modal .stats-content {
-            max-height: 80vh; overflow-y: auto; text-align: left; padding: 1rem;
-            border-radius: 8px; background-color: #f1f5f9; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
-        }
-        .stats-item { padding: 0.25rem 0; border-bottom: 1px dashed #e2e8f0; font-size: 0.8rem; }
-        .stats-item.hit-correct { color: #15803d; font-weight: 600; }
-        .stats-item.hit-missed { color: #b91c1c; font-weight: 500; }
-        .stats-item.key-miss { color: #f97316; font-weight: 500; }
-        .timing-detail { font-size: 0.75rem; color: #475569; }
-        
-        .note.correct-hit {
-            background-color: #22c55e !important; box-shadow: 0 0 10px #22c55e;
-            opacity: 1; transform: scale(1.2); 
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out, background-color 0.1s ease-out;
-        }
-        .password-message { height: 20px; font-size: 0.8rem; font-weight: 500; color: #ef4444; }
-    </style>
+/* Controls */
+.controls { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+.btn {
+  appearance: none; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  border-radius: 12px; min-height: 46px; padding: 0 14px; font: 600 15px/1 var(--font-body); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; text-decoration: none; text-align: center;
+}
+.btn.primary { background: var(--sun); border-color: var(--sun); color: var(--on-sun); font-family: var(--font-display); font-size: 17px; letter-spacing: .02em; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn:not(:disabled):hover { filter: brightness(.97); }
+.status { margin: 0; min-height: 21px; font-size: 14px; color: var(--muted); text-align: center; }
+.links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.links .wide { grid-column: 1 / -1; }
+
+/* Overlays */
+.overlay {
+  position: fixed; inset: 0; z-index: 20; background: rgba(15, 13, 10, .55);
+  display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.panel { background: var(--card); color: var(--ink); border-radius: 20px; width: 100%; max-width: 420px; max-height: 100%; overflow-y: auto; padding: 20px; box-sizing: border-box; display: grid; gap: 14px; }
+.panel h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 24px; text-wrap: balance; }
+.panel p { margin: 0; }
+.muted { color: var(--muted); font-size: 14px; }
+.stars { font-size: 34px; letter-spacing: 4px; color: var(--line); line-height: 1; }
+.stars .on { color: var(--sun); }
+.big { font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
+.big small { font-size: 18px; color: var(--muted); font-weight: 500; }
+.chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.chip { border-radius: 10px; background: var(--paper); border: 1px solid var(--line); padding: 6px 8px; }
+.chip small { display: block; font-size: 11px; color: var(--muted); }
+.chip b { font-family: var(--font-display); font-size: 18px; font-variant-numeric: tabular-nums; }
+.chip.perfect b { color: #b38a00; }
+.chip.good b { color: var(--good); }
+.chip.bad b { color: var(--bad); }
+:root[data-theme="dark"] .chip.perfect b { color: var(--sun); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip.perfect b { color: var(--sun); } }
+.tips { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--sun-soft); display: grid; gap: 6px; list-style: none; font-size: 14px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { flex: 1 1 120px; }
+input[type="text"] {
+  font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+  min-height: 44px; padding: 0 12px; width: 100%; box-sizing: border-box;
+}
+input[type="text"]:focus-visible { outline: 3px solid var(--snare); outline-offset: 1px; }
+.err { color: var(--bad); font-size: 13px; min-height: 18px; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { flex: 1; appearance: none; border: 0; background: transparent; color: var(--ink); font: 500 13px/1 var(--font-body); padding: 9px 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.board { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: r; }
+.board li { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 10px; align-items: baseline; padding: 8px 6px; border-radius: 8px; font-variant-numeric: tabular-nums; }
+.board li:nth-child(odd) { background: var(--paper); }
+.board .rk { color: var(--muted); font-weight: 600; }
+.board .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.board .ac { color: var(--muted); font-size: 13px; }
+.board .sc { font-family: var(--font-display); font-weight: 700; }
+.note { font-size: 12px; color: var(--muted); }
+.tap { height: 120px; font-family: var(--font-display); font-size: 24px; }
+input[type="range"] { width: 100%; accent-color: var(--snare); }
+textarea { width: 100%; box-sizing: border-box; min-height: 140px; font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+@media (max-width: 380px) {
+  .lvl b { font-size: 13px; }
+  .stat output { font-size: 17px; }
+  .score { grid-template-columns: 44px repeat(8, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .pad { transition: none; } }
+</style>
+
 </head>
 <body>
-    <audio id="backgroundMusic1" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/main/background_rnb2.mp3" preload="auto"></audio>
-    <audio id="backgroundMusic2" src="https://raw.githubusercontent.com/max-vorozhko/rankova_studio_drum_falling_notes/main/background_rnb.mp3" preload="auto"></audio>
-
-    <div class="game-container">
-        <!-- Game View -->
-        <div id="game-view" class="main-view">
-            <div class="flex justify-between items-center mb-1">
-                 <img src="https://github.com/max-vorozhko/rankova_studio_drum/blob/main/Rankova%20logo.png?raw=true" alt="Логотип" class="h-8">
-                 <h1 class="text-sm font-bold text-slate-800 text-right">Драм Тренажер</h1>
-            </div>
-            
-            <div class="flex justify-between items-center bg-slate-100 rounded-lg p-1 mb-1">
-                <div class="text-left px-1">
-                    <p class="text-xs font-medium text-slate-500" style="font-size: 0.6rem;">РАХУНОК</p>
-                    <p id="score" class="text-sm font-bold" style="color: #eab308;">0</p>
-                </div>
-                <div class="text-center px-1">
-                    <p class="text-xs font-medium text-slate-500" style="font-size: 0.6rem;">ЧАС</p>
-                    <p id="timer" class="text-sm font-bold text-slate-700">00:00</p>
-                </div>
-                <div class="flex items-center gap-x-1">
-                    <button id="start-button" class="pro-button" disabled>Почати</button>
-                    <button id="demo-button" class="pro-button" style="background-color:#14b8a6; color:#fff;" disabled>Демо</button> 
-                    <button id="restart-button" class="pro-button" style="background-color:#f1f5f9; color:#475569;" disabled>Рестарт</button>
-                </div>
-            </div>
-            
-            <div class="flex items-center justify-center bg-slate-50 rounded-lg p-1 mb-1 text-center">
-                <div id="beat-indicator" class="mr-2"></div>
-                <div>
-                    <p class="text-[0.6rem] font-medium text-slate-500 mb-0.5">Вправа</p>
-                    <div id="style-controls" class="flex gap-1">
-                         <button class="control-btn active" data-style="exercise1">Вправа 1</button>
-                         <button class="control-btn" data-style="exercise2">Вправа 2</button>
-                    </div>
-                </div>
-            </div>
-
-            <p id="message" class="h-5 mb-1 text-center text-xs font-semibold text-slate-600">Завантаження...</p>
-            
-            <div class="h-6 mb-1"></div>
-
-            <div class="game-area">
-                <div id="ideal-hit-line"></div>
-                <div class="lane-container">
-                    <div id="lane-kick" class="lane"></div>
-                    <div id="lane-snare" class="lane"></div>
-                </div>
-                <div id="drum-pad-container">
-                    <div id="pad-kick" class="drum-pad kick" data-drum="kick"><span class="drum-name">KICK</span><span class="key-hint">(D)</span></div>
-                    <div id="pad-snare" class="drum-pad snare" data-drum="snare"><span class="drum-name">SNARE</span><span class="key-hint">(F)</span></div>
-                </div>
-            </div>
-            
-             <div class="mt-2 flex gap-x-2 flex-wrap justify-between">
-                 <button id="leaderboard-btn" class="pro-button w-full mb-2" style="background-color:#f1f5f9; color:#475569; min-height: 40px;">🏆 Таблиця лідерів</button>
-                 <a href="https://n813529.alteg.io" target="_blank" class="pro-button w-full mb-2 text-center" style="min-height: 40px;">Запис на урок</a>
-                 <button id="record-mode-btn" class="pro-button w-1/2 mx-auto text-sm mb-2" style="background-color:#475569; color:#fff; font-size: 0.75rem; min-height: 30px;">⚙️ Режим запису ритму</button>
-             </div>
-        </div>
-
-        <!-- Leaderboard View -->
-        <div id="leaderboard-view" class="main-view hidden">
-            <h1 class="text-2xl font-bold text-slate-800 mb-4 text-center">🏆 Таблиця лідерів</h1>
-            <div id="leaderboard-style-controls" class="flex gap-2 justify-center mb-3">
-                 <button class="control-btn leaderboard-filter-btn active" data-style="exercise1">Вправа 1</button>
-                 <button class="control-btn leaderboard-filter-btn" data-style="exercise2">Вправа 2</button>
-            </div>
-            <div id="leaderboard-list" class="space-y-1 text-sm max-h-96 overflow-y-auto p-2 bg-slate-50 rounded-lg"></div>
-            <button id="back-to-game-btn" class="pro-button w-full mt-4">Назад до гри</button>
-        </div>
-
-        <!-- Save Score Modal -->
-        <div id="save-score-modal" class="modal-overlay">
-            <div class="bg-white p-6 rounded-xl shadow-lg text-center w-11/12 max-w-xs">
-                <h2 class="text-xl font-bold text-slate-800">Гра завершена!</h2>
-                <p class="text-slate-600 mt-2">Твій результат: <span id="final-score" class="font-bold text-lg" style="color: #eab308;">0</span></p>
-                <p class="mt-4 text-sm">Введи своє ім'я, щоб зберегти рекорд:</p>
-                <input type="text" id="player-name" maxlength="20" class="mt-2 w-full border border-slate-300 rounded-md p-2 text-center" placeholder="Твоє ім'я">
-                <div class="mt-4 flex gap-x-2">
-                    <button id="save-score-btn" class="pro-button flex-1 text-sm">Зберегти</button>
-                    <button id="cancel-save-btn" class="pro-button flex-1 text-sm" style="background-color:#f1f5f9; color:#475569;">Пропустити</button>
-                </div>
-                <button id="show-stats-btn" class="pro-button w-full mt-2 text-sm" style="background-color:#475569; color:#fff;">Показати статистику</button>
-            </div>
-        </div>
-        
-        <!-- Statistics Modal -->
-        <div id="stats-modal" class="modal-overlay">
-            <div class="bg-white p-4 rounded-xl shadow-lg w-11/12 max-w-md">
-                <h2 class="text-xl font-bold text-slate-800 mb-2 text-center">Детальний аналіз сесії</h2>
-                <div id="stats-content" class="stats-content"></div>
-                <button id="close-stats-btn" class="pro-button w-full mt-4 text-sm">Закрити</button>
-            </div>
-        </div>
-        
-        <!-- Record Mode Modal -->
-        <div id="record-modal" class="modal-overlay">
-            <div class="bg-white p-6 rounded-xl shadow-lg w-11/12 max-w-md text-center">
-                <h2 class="text-xl font-bold text-slate-800 mb-2">🥁 Режим запису ритму</h2>
-                <p id="record-message" class="text-sm font-semibold text-slate-600 mb-3 h-5">Оберіть трек і натисніть "Почати запис".</p>
-                <div class="bg-slate-100 p-3 rounded-lg mb-4">
-                    <p class="text-xs font-medium text-slate-500 mb-1">Обрати трек для запису:</p>
-                    <div id="record-track-controls" class="flex gap-2 justify-center">
-                         <button class="control-btn record-track-btn active" data-track-id="backgroundMusic1" data-style="exercise1">Трек 1 (28 с)</button>
-                         <button class="control-btn record-track-btn" data-track-id="backgroundMusic2" data-style="exercise2">Трек 2 (47 с)</button>
-                    </div>
-                </div>
-                <div id="record-controls-container" class="flex gap-x-2">
-                    <button id="record-start-btn" class="pro-button flex-1 text-sm">Почати запис</button>
-                    <button id="record-stop-btn" class="pro-button flex-1 text-sm" disabled style="background-color:#ef4444; color:#fff;">Стоп</button>
-                </div>
-                <div id="record-result-container" class="mt-4 hidden text-left">
-                    <p class="text-sm font-medium text-slate-800 mb-1">Отриманий ритм (Скопіюйте):</p>
-                    <textarea id="recorded-rhythm-output" rows="10" class="w-full border border-slate-300 rounded-md p-2 text-xs" readonly></textarea>
-                </div>
-                <button id="record-close-btn" class="pro-button w-full mt-4 text-sm" style="background-color:#475569; color:#fff;">Закрити</button>
-            </div>
-        </div>
-
-        <!-- Password Modal -->
-        <div id="password-modal" class="modal-overlay">
-            <div class="bg-white p-6 rounded-xl shadow-lg text-center w-11/12 max-w-xs">
-                <h2 class="text-xl font-bold text-slate-800">Введіть пароль розробника</h2>
-                <p id="password-message" class="password-message mt-2"></p>
-                <input type="password" id="password-input" maxlength="4" class="mt-2 w-full border border-slate-300 rounded-md p-2 text-center text-xl tracking-widest" placeholder="****">
-                <div class="mt-4 flex gap-x-2">
-                    <button id="password-enter-btn" class="pro-button flex-1 text-sm">Увійти</button>
-                    <button id="password-cancel-btn" class="pro-button flex-1 text-sm" style="background-color:#f1f5f9; color:#475569;">Скасувати</button>
-                </div>
-            </div>
-        </div>
+<div class="app" id="app">
+  <header class="top">
+    <img src="rankova-logo.png" alt="Rankova Studio" width="92" height="38">
+    <div class="name">
+      <div class="eyebrow">Падаючі ноти</div>
+      <h1>Драм тренажер</h1>
     </div>
+  </header>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyCpUNB2yrZUXlo1gCNYDzJqGK2s0IJUbMo",
-            authDomain: "rankova-drum-falling-notes.firebaseapp.com",
-            projectId: "rankova-drum-falling-notes",
-            storageBucket: "rankova-drum-falling-notes.firebasestorage.app",
-            messagingSenderId: "496423964661",
-            appId: "1:496423964661:web:e7ece64e8dff92a64b5abc"
-        };
+  <nav class="levels" id="levels" aria-label="Вправа"></nav>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const audioBuffers = {};
-        const drumSounds = {
-            'kick': 'https://raw.githubusercontent.com/wesbos/JavaScript30/master/01%20-%20JavaScript%20Drum%20Kit/sounds/kick.wav',
-            'snare': 'https://raw.githubusercontent.com/wesbos/JavaScript30/master/01%20-%20JavaScript%20Drum%20Kit/sounds/snare.wav'
-        };
-        
-        const rhythmPatterns = {
-            exercise1: [
-                { time: 1187, drum: 'kick' }, { time: 1873, drum: 'snare' }, { time: 2493, drum: 'kick' }, { time: 3136, drum: 'snare' },
-                { time: 3718, drum: 'kick' }, { time: 4358, drum: 'snare' }, { time: 5011, drum: 'kick' }, { time: 5654, drum: 'snare' },
-                { time: 6247, drum: 'kick' }, { time: 6900, drum: 'snare' }, { time: 7525, drum: 'kick' }, { time: 8168, drum: 'snare' },
-                { time: 8794, drum: 'kick' }, { time: 9449, drum: 'snare' }, { time: 10028, drum: 'kick' }, { time: 10677, drum: 'snare' },
-                { time: 11295, drum: 'kick' }, { time: 11953, drum: 'snare' }, { time: 12586, drum: 'kick' }, { time: 13166, drum: 'snare' },
-                { time: 13798, drum: 'kick' }, { time: 14425, drum: 'snare' }, { time: 15089, drum: 'kick' }, { time: 15732, drum: 'snare' },
-                { time: 16336, drum: 'kick' }, { time: 16952, drum: 'snare' }, { time: 17625, drum: 'kick' }, { time: 18256, drum: 'snare' },
-                { time: 18876, drum: 'kick' }, { time: 19543, drum: 'snare' }, { time: 20152, drum: 'kick' }, { time: 20751, drum: 'snare' },
-                { time: 21411, drum: 'kick' }, { time: 22000, drum: 'snare' }, { time: 22656, drum: 'kick' }, { time: 23335, drum: 'snare' },
-                { time: 23958, drum: 'kick' }, { time: 24604, drum: 'snare' }, { time: 25252, drum: 'kick' }, { time: 25866, drum: 'snare' },
-                { time: 26465, drum: 'kick' }, { time: 27120, drum: 'snare' }, { time: 27696, drum: 'kick' }
-            ],
-            exercise2: [
-                { time: 3697, drum: 'kick' }, { time: 4293, drum: 'snare' }, { time: 4834, drum: 'kick' }, { time: 5079, drum: 'kick' },
-                { time: 5389, drum: 'snare' }, { time: 5909, drum: 'kick' }, { time: 6478, drum: 'snare' }, { time: 6977, drum: 'kick' },
-                { time: 7243, drum: 'kick' }, { time: 7528, drum: 'snare' }, { time: 8030, drum: 'kick' }, { time: 8604, drum: 'snare' },
-                { time: 9102, drum: 'kick' }, { time: 9385, drum: 'kick' }, { time: 9686, drum: 'snare' }, { time: 10218, drum: 'kick' },
-                { time: 10791, drum: 'snare' }, { time: 11317, drum: 'kick' }, { time: 11537, drum: 'kick' }, { time: 11847, drum: 'snare' },
-                { time: 12365, drum: 'kick' }, { time: 12927, drum: 'snare' }, { time: 13443, drum: 'kick' }, { time: 13711, drum: 'kick' },
-                { time: 14010, drum: 'snare' }, { time: 14557, drum: 'kick' }, { time: 15085, drum: 'snare' }, { time: 15599, drum: 'kick' },
-                { time: 15874, drum: 'kick' }, { time: 16166, drum: 'snare' }, { time: 16703, drum: 'kick' }, { time: 17268, drum: 'snare' },
-                { time: 17780, drum: 'kick' }, { time: 18056, drum: 'kick' }, { time: 18337, drum: 'snare' }, { time: 18873, drum: 'kick' },
-                { time: 19427, drum: 'snare' }, { time: 19954, drum: 'kick' }, { time: 20232, drum: 'kick' }, { time: 20525, drum: 'snare' },
-                { time: 21022, drum: 'kick' }, { time: 21561, drum: 'snare' }, { time: 22090, drum: 'kick' }, { time: 22366, drum: 'kick' },
-                { time: 22643, drum: 'snare' }, { time: 23161, drum: 'kick' }, { time: 23724, drum: 'snare' }, { time: 24263, drum: 'kick' },
-                { time: 24546, drum: 'kick' }, { time: 24831, drum: 'snare' }, { time: 25360, drum: 'kick' }, { time: 25911, drum: 'snare' },
-                { time: 26427, drum: 'kick' }, { time: 26709, drum: 'kick' }, { time: 26973, drum: 'snare' }, { time: 27522, drum: 'kick' },
-                { time: 28073, drum: 'snare' }, { time: 28565, drum: 'kick' }, { time: 28842, drum: 'kick' }, { time: 29131, drum: 'snare' },
-                { time: 29650, drum: 'kick' }, { time: 30209, drum: 'snare' }, { time: 30728, drum: 'kick' }, { time: 31029, drum: 'kick' },
-                { time: 31319, drum: 'snare' }, { time: 31840, drum: 'kick' }, { time: 32365, drum: 'snare' }, { time: 32892, drum: 'kick' },
-                { time: 33175, drum: 'kick' }, { time: 33491, drum: 'snare' }, { time: 33979, drum: 'kick' }, { time: 34523, drum: 'snare' },
-                { time: 35046, drum: 'kick' }, { time: 35321, drum: 'kick' }, { time: 35600, drum: 'snare' }, { time: 36167, drum: 'kick' },
-                { time: 36685, drum: 'snare' }, { time: 37184, drum: 'kick' }, { time: 37450, drum: 'kick' }, { time: 37798, drum: 'snare' },
-                { time: 38313, drum: 'kick' }, { time: 38879, drum: 'snare' }, { time: 39401, drum: 'kick' }, { time: 39681, drum: 'kick' },
-                { time: 39962, drum: 'snare' }, { time: 40474, drum: 'kick' }, { time: 41037, drum: 'snare' }, { time: 41561, drum: 'kick' },
-                { time: 41827, drum: 'kick' }, { time: 42117, drum: 'snare' }, { time: 42650, drum: 'kick' }, { time: 43222, drum: 'snare' },
-                { time: 43713, drum: 'kick' }, { time: 43999, drum: 'kick' }, { time: 44296, drum: 'snare' }, { time: 44836, drum: 'kick' },
-                { time: 45362, drum: 'snare' }, { time: 45863, drum: 'kick' }, { time: 46130, drum: 'kick' }, { time: 46454, drum: 'snare' }
-            ]
-        };
-        
-        const elements = {
-            startButton: document.getElementById('start-button'),
-            demoButton: document.getElementById('demo-button'), 
-            scoreDisplay: document.getElementById('score'),
-            timerDisplay: document.getElementById('timer'),
-            messageDisplay: document.getElementById('message'),
-            gameView: document.getElementById('game-view'),
-            leaderboardView: document.getElementById('leaderboard-view'),
-            leaderboardBtn: document.getElementById('leaderboard-btn'),
-            backToGameBtn: document.getElementById('back-to-game-btn'),
-            leaderboardList: document.getElementById('leaderboard-list'),
-            saveScoreModal: document.getElementById('save-score-modal'),
-            finalScoreDisplay: document.getElementById('final-score'),
-            playerNameInput: document.getElementById('player-name'),
-            saveScoreBtn: document.getElementById('save-score-btn'),
-            cancelSaveBtn: document.getElementById('cancel-save-btn'),
-            laneContainer: document.querySelector('.lane-container'),
-            drumPadContainer: document.getElementById('drum-pad-container'),
-            backgroundMusic1: document.getElementById('backgroundMusic1'),
-            backgroundMusic2: document.getElementById('backgroundMusic2'),
-            restartButton: document.getElementById('restart-button'), 
-            beatIndicator: document.getElementById('beat-indicator'),
-            showStatsBtn: document.getElementById('show-stats-btn'),
-            statsModal: document.getElementById('stats-modal'),
-            statsContent: document.getElementById('stats-content'),
-            closeStatsBtn: document.getElementById('close-stats-btn'),
-            styleControls: document.getElementById('style-controls'),
-            idealHitLine: document.getElementById('ideal-hit-line'), 
-            recordModeBtn: document.getElementById('record-mode-btn'),
-            recordModal: document.getElementById('record-modal'),
-            recordMessage: document.getElementById('record-message'),
-            recordTrackControls: document.getElementById('record-track-controls'),
-            recordStartBtn: document.getElementById('record-start-btn'),
-            recordStopBtn: document.getElementById('record-stop-btn'),
-            recordedRhythmOutput: document.getElementById('recorded-rhythm-output'),
-            recordResultContainer: document.getElementById('record-result-container'),
-            recordCloseBtn: document.getElementById('record-close-btn'),
-            passwordModal: document.getElementById('password-modal'),
-            passwordInput: document.getElementById('password-input'),
-            passwordEnterBtn: document.getElementById('password-enter-btn'),
-            passwordCancelBtn: document.getElementById('password-cancel-btn'),
-            passwordMessage: document.getElementById('password-message'),
-            leaderboardStyleControls: document.getElementById('leaderboard-style-controls'),
-        };
-        
-        const drumPads = { 'kick': document.getElementById('pad-kick'), 'snare': document.getElementById('pad-snare') };
-        const drumLanes = { 'kick': document.getElementById('lane-kick'), 'snare': document.getElementById('lane-snare') };
-        
-        const GAME_DURATION_SECONDS_MAP = { 'exercise1': 28, 'exercise2': 47 };
-        const TIMING_TOLERANCE_MS = 200; 
-        const FIXED_FALL_DURATION_MS = 2500; 
-        const NOTE_START_Y = -30; 
-        const HIT_LINE_Y = 275; 
-        const BPM = 100; 
-        const BEAT_INTERVAL = (60 / BPM) * 1000; 
-        const CORRECT_PASSWORD = "1111"; 
-        const LEADERBOARD_COLLECTION_NAME = "leaderboard_new";
-        
-        let score = 0, gameActive = false, soundsReady = false, timeLeft = 0;
-        let gameTimer, beatTimer;
-        let rhythmTimeouts = [];
-        let scheduledSources = [];
-        let currentExercise = 'exercise1';
-        let currentBGM;
-        let trackDuration = GAME_DURATION_SECONDS_MAP[currentExercise];
-        let notesOnScreen = [];
-        let noteIdCounter = 0; 
-        let gameStartTime = 0; 
-        let sessionLog = []; 
-        let isDemoMode = false;
-        let isRecording = false;
-        let recordedHits = [];
-        let recordStartTime = 0;
-        let recordAudio = elements.backgroundMusic1;
-        let bgmReady = { 'backgroundMusic1': false, 'backgroundMusic2': false };
-        
-        function setIdealHitLinePosition() { if (elements.idealHitLine) elements.idealHitLine.style.top = `${HIT_LINE_Y}px`; }
-        
-        async function loadSound(name, url) {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            audioBuffers[name] = await audioContext.decodeAudioData(arrayBuffer);
-        }
+  <section class="bar" aria-label="Партія одного такту">
+    <div class="bar-head"><p id="lvl-hint"></p><span class="eyebrow" id="lvl-bpm"></span></div>
+    <div class="score" id="bar-score"></div>
+  </section>
 
-        function setButtonsState(isDisabled, message) {
-            elements.startButton.disabled = isDisabled; elements.demoButton.disabled = isDisabled; elements.recordModeBtn.disabled = isDisabled;
-            elements.messageDisplay.textContent = message;
-            if (!isDisabled) {
-                elements.messageDisplay.classList.remove('text-slate-600', 'text-red-500'); elements.messageDisplay.classList.add('text-green-600');
-                elements.messageDisplay.textContent = `Вправа ${currentExercise.replace('exercise', '')}. Готовий? Натисни Почати.`;
-            } else {
-                 elements.messageDisplay.classList.remove('text-green-600', 'text-red-500'); elements.messageDisplay.classList.add('text-slate-600');
-            }
-        }
+  <section class="hud" aria-live="off">
+    <div class="stat"><small>Бали</small><output id="h-score">0</output></div>
+    <div class="stat"><small>Комбо</small><output id="h-combo">0</output></div>
+    <div class="stat"><small>Точність</small><output id="h-acc">—</output></div>
+    <div class="stat"><small>Час</small><output id="h-time">0:00</output></div>
+  </section>
 
-        function checkAudioReady() {
-            const currentTrackId = currentExercise === 'exercise1' ? 'backgroundMusic1' : 'backgroundMusic2';
-            if (soundsReady && bgmReady[currentTrackId]) setButtonsState(false, "Готовий? Натисни 'Почати'");
-            else setButtonsState(true, "Завантаження... Очікуємо готовності треків.");
-        }
-        
-        async function loadAllSounds() {
-            setButtonsState(true, "Завантаження...");
-            try {
-                const drumPromises = Object.entries(drumSounds).map(([name, url]) => loadSound(name, url));
-                await Promise.all(drumPromises);
-                soundsReady = true;
-                const setupAudioElement = (audioElement, id) => new Promise((resolve) => {
-                    const checkAndResolve = () => {
-                        if (audioElement.readyState >= 3) { 
-                            if (audioElement.duration && !isNaN(audioElement.duration)) {
-                                const exercise = id === 'backgroundMusic1' ? 'exercise1' : 'exercise2';
-                                GAME_DURATION_SECONDS_MAP[exercise] = Math.ceil(audioElement.duration);
-                            }
-                            bgmReady[id] = true; resolve();
-                        }
-                    };
-                    audioElement.dataset.style = id === 'backgroundMusic1' ? 'exercise1' : 'exercise2';
-                    audioElement.addEventListener('canplaythrough', checkAndResolve);
-                    audioElement.addEventListener('loadeddata', checkAndResolve);
-                    audioElement.load(); 
-                    const interval = setInterval(checkAndResolve, 500);
-                    setTimeout(() => { clearInterval(interval); if (!bgmReady[id]) { bgmReady[id] = true; resolve(); } }, 15000); 
-                });
-                await Promise.all([ setupAudioElement(elements.backgroundMusic1, 'backgroundMusic1'), setupAudioElement(elements.backgroundMusic2, 'backgroundMusic2') ]);
-                setCurrentExercise(currentExercise); checkAudioReady();
-            } catch (error) { console.error("Audio loading error:", error); setButtonsState(true, `Помилка завантаження аудіо.`); }
-        }
-        
-        function getFirstHitTime(rhythm) {
-            if (!rhythm || rhythm.length === 0) return 0; 
-            const firstHit = rhythm.reduce((minTime, note) => Math.min(minTime, note.time), Infinity);
-            return firstHit !== Infinity ? firstHit : 0;
-        }
+  <section class="stage" id="stage">
+    <canvas id="hw" aria-label="Доріжки з нотами: ліва — бочка, права — малий барабан"></canvas>
+    <div class="pads">
+      <button class="pad kick" id="pad-0" type="button" aria-label="Бочка (клавіша D)">Бочка<small>kick <kbd>D</kbd></small></button>
+      <button class="pad snare" id="pad-1" type="button" aria-label="Малий барабан (клавіша F)">Малий<small>snare <kbd>F</kbd></small></button>
+    </div>
+  </section>
 
-        function playSound(name, time = 0) {
-            if (!soundsReady || !audioBuffers[name]) return;
-            if (audioContext.state === 'suspended') { audioContext.resume().catch(e => console.error(e)); }
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffers[name];
-            source.connect(audioContext.destination);
-            source.start(time);
-            scheduledSources.push(source);
-            source.onended = () => { scheduledSources = scheduledSources.filter(s => s !== source); };
-        }
-        
-        function setCurrentExercise(exercise) {
-            currentExercise = (exercise === 'exercise1' || exercise === 'exercise2') ? exercise : 'exercise1';
-            trackDuration = GAME_DURATION_SECONDS_MAP[currentExercise];
-            currentBGM = currentExercise === 'exercise1' ? elements.backgroundMusic1 : elements.backgroundMusic2;
-            timeLeft = trackDuration; updateTimerDisplay();
-            if (!gameActive) { elements.scoreDisplay.textContent = 0; checkAudioReady(); }
-            elements.styleControls.querySelectorAll('.control-btn').forEach(btn => {
-                 if (btn.dataset.style === currentExercise) btn.classList.add('active'); else btn.classList.remove('active');
-            });
-        }
+  <div class="controls">
+    <button class="btn primary" id="btn-start" type="button" disabled>Почати</button>
+    <button class="btn" id="btn-demo" type="button" disabled>Демо</button>
+    <button class="btn" id="btn-stop" type="button" disabled>Стоп</button>
+  </div>
+  <p class="status" id="status" role="status">Завантажую музику…</p>
 
-        function flashPadLogicOnly(drumName) {
-            const pad = drumPads[drumName]; if (!pad) return;
-            pad.classList.add('auto-flash'); setTimeout(() => pad.classList.remove('auto-flash'), 100);
-        }
-        
-        function startBeatIndicator() {
-            let nextBeatTime = audioContext.currentTime;
-            function scheduleBeat() {
-                const beatDuration = 0.1; 
-                const flash = () => { elements.beatIndicator.classList.add('beat-flash'); setTimeout(() => elements.beatIndicator.classList.remove('beat-flash'), beatDuration * 1000); };
-                if (nextBeatTime < audioContext.currentTime + 1.0) { 
-                    const delay = Math.max(0, nextBeatTime - audioContext.currentTime); setTimeout(flash, delay * 1000);
-                    nextBeatTime += BEAT_INTERVAL / 1000; 
-                }
-                if (gameActive || isDemoMode) beatTimer = setTimeout(scheduleBeat, 100);
-            }
-            nextBeatTime = audioContext.currentTime + (BEAT_INTERVAL / 1000) - (audioContext.currentTime % (BEAT_INTERVAL / 1000));
-            scheduleBeat();
-        }
+  <footer class="links">
+    <button class="btn" id="btn-board" type="button">Таблиця лідерів</button>
+    <button class="btn" id="btn-calib" type="button">Затримка звуку</button>
+    <a class="btn primary wide" id="book" href="https://n813529.alteg.io/" target="_blank" rel="noopener">Записатись на урок</a>
+    <button class="btn wide" id="btn-dev" type="button" hidden>Запис ритму (розробник)</button>
+    <a class="back wide" href="https://max-vorozhko.github.io/rankova_usefull/">← Усі ігри Rankova Studio</a>
+  </footer>
+</div>
 
-        async function init() {
-            try { await signOut(auth); await signInAnonymously(auth); console.log("Вхід виконано успішно!"); } 
-            catch (error) { console.error("Auth failed:", error); elements.leaderboardBtn.disabled = true; elements.messageDisplay.textContent = 'Помилка підключення до бази даних.'; }
-            elements.backgroundMusic1.volume = 0.3; elements.backgroundMusic2.volume = 0.3;
-            elements.backgroundMusic1.loop = false; elements.backgroundMusic2.loop = false; 
-            setIdealHitLinePosition(); await loadAllSounds(); setCurrentExercise(currentExercise); setupEventListeners();
-        }
-        
-        function updateTimerDisplay() {
-            const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-            const seconds = String(Math.round(timeLeft % 60)).padStart(2, '0');
-            elements.timerDisplay.textContent = `${minutes}:${seconds}`;
-        }
-        
-        // *** ОНОВЛЕНА ЛОГІКА START GAME (Декаплінг старту музики та нот) ***
-        function startGame() {
-            if (!currentBGM || !rhythmPatterns[currentExercise]) return;
-            isDemoMode = false; currentBGM.currentTime = 0;
-            audioContext.resume().then(() => {
-                const rhythm = rhythmPatterns[currentExercise];
-                const firstHitTime = getFirstHitTime(rhythm);
-                
-                // Розрахунок затримки музики
-                const timeBeforeMusicStarts = Math.max(0, FIXED_FALL_DURATION_MS - firstHitTime);
-                // ЗБІЛЬШЕНИЙ БУФЕР ДЛЯ СТАБІЛЬНОСТІ (250ms)
-                const BUFFER = 250;
-                const totalStartDelay = timeBeforeMusicStarts + BUFFER;
+<div class="overlay" id="ov-result" hidden role="dialog" aria-modal="true" aria-labelledby="r-title">
+  <div class="panel">
+    <div>
+      <div class="eyebrow" id="r-level"></div>
+      <h2 id="r-title">Готово!</h2>
+    </div>
+    <div class="stars" id="r-stars" aria-label=""></div>
+    <div class="big"><span id="r-score">0</span> <small id="r-max"></small></div>
+    <div class="chips" id="r-chips"></div>
+    <ul class="tips" id="r-tips"></ul>
+    <form id="save-form" class="row" novalidate>
+      <input type="text" id="player-name" maxlength="20" placeholder="Твоє ім'я" autocomplete="nickname" aria-label="Ім'я для таблиці лідерів">
+      <button class="btn primary" type="submit" id="btn-save">Зберегти</button>
+    </form>
+    <p class="err" id="save-err"></p>
+    <div class="row">
+      <button class="btn" id="btn-again" type="button">Ще раз</button>
+      <button class="btn" id="btn-close-r" type="button">Закрити</button>
+    </div>
+  </div>
+</div>
 
-                const now = performance.now();
-                // Час, коли музика заплановано почне грати
-                const scheduledMusicStartTime = now + totalStartDelay;
+<div class="overlay" id="ov-board" hidden role="dialog" aria-modal="true" aria-labelledby="b-title">
+  <div class="panel">
+    <h2 id="b-title">Таблиця лідерів</h2>
+    <div class="seg" id="b-levels"></div>
+    <div class="seg" id="b-period">
+      <button type="button" data-p="month" aria-pressed="true">Цей місяць</button>
+      <button type="button" data-p="all" aria-pressed="false">Весь час</button>
+    </div>
+    <ol class="board" id="b-list"></ol>
+    <p class="note" id="b-note"></p>
+    <button class="btn" id="btn-close-b" type="button">Закрити</button>
+  </div>
+</div>
 
-                // *** ІНДИВІДУАЛЬНА КОРЕКЦІЯ СИНХРОНІЗАЦІЇ ***
-                // Якщо вправа 1 "випереджає" (нота раніше звуку), ставимо 0 або -30 (залежить від відчуттів).
-                // Якщо вправа 2 "ок" (нота вчасно), залишаємо 120.
-                // 0 мс означає, що нота прилетить пізніше (ніж при 120), бо ми менше віднімаємо від часу польоту.
-                const syncCorrection = currentExercise === 'exercise1' ? 0 : 120;
+<div class="overlay" id="ov-calib" hidden role="dialog" aria-modal="true" aria-labelledby="c-title">
+  <div class="panel">
+    <h2 id="c-title">Затримка звуку</h2>
+    <p class="muted">Bluetooth-навушники та колонки запізнюються на 0,1–0,3 с. Натисни «Слухати», потім тапай по великій кнопці в такт клацанням. Гра врахує затримку.</p>
+    <button class="btn tap" id="c-tap" type="button">Тап</button>
+    <p id="c-msg" class="muted" role="status"></p>
+    <label class="muted" for="c-range">Затримка: <b id="c-val">0 мс</b></label>
+    <input type="range" id="c-range" min="-100" max="400" step="5" value="0">
+    <div class="row">
+      <button class="btn primary" id="c-run" type="button">Слухати</button>
+      <button class="btn" id="c-reset" type="button">Скинути</button>
+      <button class="btn" id="c-close" type="button">Готово</button>
+    </div>
+  </div>
+</div>
 
-                score = 0; elements.scoreDisplay.textContent = score; sessionLog = []; noteIdCounter = 0; gameActive = true;
-                elements.startButton.disabled = true; elements.demoButton.disabled = true; elements.recordModeBtn.disabled = true; elements.restartButton.disabled = false;
-                elements.messageDisplay.textContent = 'Увага...'; 
-                notesOnScreen.forEach(note => { if (note.element.parentNode) note.element.remove(); if (note.fallTimer) clearTimeout(note.fallTimer); });
-                notesOnScreen = []; rhythmTimeouts.forEach(clearTimeout); rhythmTimeouts = [];
+<div class="overlay" id="ov-dev" hidden role="dialog" aria-modal="true" aria-labelledby="d-title">
+  <div class="panel">
+    <h2 id="d-title">Запис ритму</h2>
+    <p class="muted">Трек обраної вправи. Грай на падах або D/F. Результат округлюється до восьмих у сітці треку.</p>
+    <div class="row">
+      <button class="btn primary" id="d-rec" type="button">Почати запис</button>
+      <button class="btn" id="d-stop" type="button" disabled>Стоп</button>
+    </div>
+    <textarea id="d-out" readonly aria-label="Записаний ритм"></textarea>
+    <div class="row">
+      <button class="btn" id="d-copy" type="button">Копіювати</button>
+      <button class="btn" id="d-close" type="button">Закрити</button>
+    </div>
+  </div>
+</div>
 
-                // 1. Запускаємо музику через розраховану затримку
-                const startMusicTimeout = setTimeout(() => {
-                    currentBGM.play().then(() => {
-                        gameStartTime = performance.now(); 
-                        elements.messageDisplay.textContent = 'Грай!'; startBeatIndicator();
-                        trackDuration = GAME_DURATION_SECONDS_MAP[currentExercise]; timeLeft = trackDuration; updateTimerDisplay();
-                        gameTimer = setInterval(() => { if (timeLeft > 0) timeLeft--; updateTimerDisplay(); }, 1000);
-                        currentBGM.onended = () => endGame(true);
-                    }).catch(error => { console.error("Autoplay blocked", error); elements.messageDisplay.textContent = '❌ Натисни ще раз'; gameActive = false; elements.startButton.disabled = false; });
-                }, totalStartDelay);
-                rhythmTimeouts.push(startMusicTimeout);
+<script>
+(() => {
+'use strict';
 
-                // 2. Плануємо ноти ВІДНОСНО запланованого часу старту музики.
-                scheduleNotes(rhythm, scheduledMusicStartTime, syncCorrection);
-            });
-        }
+/* ---------- Config ---------- */
+const IS_LIVE = /(^|\.)github\.io$/.test(location.hostname);
+const DEV = location.hash === '#dev';
+const BOOKING_URL = 'https://n813529.alteg.io/?utm_source=games&utm_medium=drum_trainer';
+const FIREBASE = {
+  apiKey: 'AIzaSyCpUNB2yrZUXlo1gCNYDzJqGK2s0IJUbMo',
+  authDomain: 'rankova-drum-falling-notes.firebaseapp.com',
+  projectId: 'rankova-drum-falling-notes',
+  storageBucket: 'rankova-drum-falling-notes.firebasestorage.app',
+  messagingSenderId: '496423964661',
+  appId: '1:496423964661:web:e7ece64e8dff92a64b5abc'
+};
+const BOARD_COLLECTION = 'leaderboard_v2';
+const FALL = 1.9;                                   // seconds a note takes to reach the line
+const WIN = { perfect: 0.045, good: 0.09, ok: 0.16 }; // judgement windows, seconds
+const PTS = { perfect: 3, good: 2, ok: 1 };
+const COUNT_WORDS = ['раз', 'і', 'два', 'і', 'три', 'і', 'чот', 'і'];
 
-        // Спільна функція планування нот (використовується і для Game, і для Demo)
-        // *** ДОДАНО ПАРАМЕТР correction ***
-        function scheduleNotes(rhythm, musicStartTime, correction) {
-            rhythm.forEach(note => {
-                // Коли нота має бути на лінії (Абсолютний час = Час старту музики + Таймкод ноти - КОРЕКЦІЯ)
-                const absoluteHitTime = musicStartTime + note.time - correction;
-                
-                // Коли нота має почати падати (Абсолютний час удару - 2500мс)
-                const absoluteSpawnTime = absoluteHitTime - FIXED_FALL_DURATION_MS;
-                
-                const now = performance.now();
-                // Скільки чекати від "зараз" до спавну
-                const delayUntilSpawn = absoluteSpawnTime - now;
+// Patterns: eighth position inside a bar (0 = downbeat) -> drum
+const BASIC = { 0: 'k', 2: 's', 4: 'k', 6: 's' };
+const GROOVE = { 0: 'k', 1: 'k', 2: 's', 4: 'k', 6: 's' };
+// Tempo grids measured from the tracks (BPM, first beat t0 in seconds, which eighth is a downbeat)
+const LEVELS = [
+  { id: 'l1', title: 'Базовий біт', hint: 'Бочка і малий по черзі на кожну долю.', track: 'background_rnb2.mp3', bpm: 94.94, t0: 0.5672, phase: 2, pat: BASIC, from: 2, to: 86 },
+  { id: 'l2', title: 'Грув', hint: 'Подвійна бочка на «раз-і». Той самий трек.', track: 'background_rnb2.mp3', bpm: 94.94, t0: 0.5672, phase: 2, pat: GROOVE, from: 2, to: 86 },
+  { id: 'l3', title: 'Грув швидко', hint: 'Той самий грув, швидший трек.', track: 'background_rnb.mp3', bpm: 111.28, t0: 0.4006, phase: 0, pat: GROOVE, from: 12, to: 170 }
+];
+LEVELS.forEach(L => {
+  L.P = 60 / L.bpm;
+  L.notes = [];
+  for (let e = L.from; e <= L.to; e++) {
+    const d = L.pat[mod(e - L.phase, 8)];
+    if (d) L.notes.push({ t: L.t0 + e * L.P / 2, lane: d === 'k' ? 0 : 1 });
+  }
+  L.first = L.notes[0].t;
+  L.last = L.notes[L.notes.length - 1].t;
+  L.max = 0;
+  for (let i = 0; i < L.notes.length; i++) L.max += PTS.perfect * multFor(i);
+});
 
-                if (delayUntilSpawn >= 0) {
-                    const noteTimeoutId = setTimeout(() => { 
-                        if(gameActive || isDemoMode) spawnNote(note.drum, absoluteHitTime); 
-                    }, delayUntilSpawn);
-                    rhythmTimeouts.push(noteTimeoutId);
-                } else {
-                    // Якщо затримка від'ємна, спавнимо одразу.
-                    if(gameActive || isDemoMode) spawnNote(note.drum, absoluteHitTime);
-                }
+function mod(a, n) { return ((a % n) + n) % n; }
+function multFor(combo) { return 1 + Math.min(3, Math.floor(combo / 10)); }
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+};
 
-                // Планування флешу/звуку (для демо)
-                const delayUntilHit = absoluteHitTime - now;
-                if (delayUntilHit >= 0) {
-                    const flashTimeoutId = setTimeout(() => {
-                        if (gameActive || isDemoMode) flashPadLogicOnly(note.drum);
-                        if (isDemoMode) {
-                             playSound(note.drum);
-                             const targetNote = notesOnScreen.find(n => n.drum === note.drum && !n.hasBeenHit);
-                             if (targetNote) {
-                                  targetNote.hasBeenHit = true; targetNote.element.classList.add('correct-hit');
-                                  if (targetNote.fallTimer) clearTimeout(targetNote.fallTimer); 
-                                  setTimeout(() => { targetNote.element.remove(); notesOnScreen = notesOnScreen.filter(n => n !== targetNote); }, 50); 
-                             }
-                        }
-                    }, delayUntilHit);
-                    rhythmTimeouts.push(flashTimeoutId);
-                }
-            });
-        }
-        
-        // *** ОНОВЛЕНА ЛОГІКА DEMO (Та ж сама синхронізація) ***
-        function startDemoMode() {
-            if (!currentBGM || !rhythmPatterns[currentExercise]) return;
-            resetGame(); isDemoMode = true; gameActive = false; currentBGM.currentTime = 0;
-            audioContext.resume().then(() => {
-                const rhythm = rhythmPatterns[currentExercise];
-                const firstHitTime = getFirstHitTime(rhythm);
-                const timeBeforeMusicStarts = Math.max(0, FIXED_FALL_DURATION_MS - firstHitTime);
-                const BUFFER = 250; // Збільшений буфер
-                const totalStartDelay = timeBeforeMusicStarts + BUFFER;
-                const now = performance.now();
-                const scheduledMusicStartTime = now + totalStartDelay;
+/* ---------- State ---------- */
+let level = LEVELS[store.get('rk_level', 0)] || LEVELS[0];
+let latencyMs = store.get('rk_latency_ms', 0);
+let mode = 'idle';           // idle | play | demo | calib | rec
+let run = null;
+let lastResult = null;
+let wakeLock = null;
 
-                // *** ІНДИВІДУАЛЬНА КОРЕКЦІЯ ДЛЯ ДЕМО ТАКОЖ ***
-                const syncCorrection = currentExercise === 'exercise1' ? 0 : 120;
+/* ---------- Audio ---------- */
+let ctx = null, master, musicGain, drumBus, noiseBuf;
+const trackCache = {};
+function ensureCtx() {
+  if (ctx) return ctx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  ctx = new AC({ latencyHint: 'interactive' });
+  const comp = ctx.createDynamicsCompressor();
+  comp.connect(ctx.destination);
+  master = ctx.createGain(); master.gain.value = 0.95; master.connect(comp);
+  musicGain = ctx.createGain(); musicGain.gain.value = 0.6; musicGain.connect(master);
+  drumBus = ctx.createGain(); drumBus.gain.value = 0.85; drumBus.connect(master);
+  noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.4), ctx.sampleRate);
+  const ch = noiseBuf.getChannelData(0);
+  for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  return ctx;
+}
+function loadTrack(name) {
+  if (!trackCache[name]) {
+    ensureCtx();
+    trackCache[name] = fetch(name)
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+      .then(ab => new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej)));
+    trackCache[name].catch(() => { delete trackCache[name]; });
+  }
+  return trackCache[name];
+}
+function env(g, t, peak, dur) {
+  g.gain.setValueAtTime(peak, t);
+  g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+}
+function noise(t, dur, type, freq, peak) {
+  const n = ctx.createBufferSource(); n.buffer = noiseBuf;
+  const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+  const g = ctx.createGain(); env(g, t, peak, dur);
+  n.connect(f); f.connect(g); g.connect(drumBus);
+  n.start(t); n.stop(t + dur + 0.02);
+}
+function playKick(t) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(165, t);
+  o.frequency.exponentialRampToValueAtTime(44, t + 0.12);
+  env(g, t, 1.0, 0.36);
+  o.connect(g); g.connect(drumBus);
+  o.start(t); o.stop(t + 0.4);
+  noise(t, 0.012, 'highpass', 3000, 0.22);
+}
+function playSnare(t) {
+  noise(t, 0.19, 'highpass', 1400, 0.65);
+  noise(t, 0.08, 'bandpass', 3500, 0.35);
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(205, t);
+  o.frequency.exponentialRampToValueAtTime(150, t + 0.08);
+  env(g, t, 0.5, 0.11);
+  o.connect(g); g.connect(drumBus);
+  o.start(t); o.stop(t + 0.14);
+}
+function playDrum(lane, t) { if (lane === 0) playKick(t); else playSnare(t); }
+function playClick(t, accent) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'square'; o.frequency.value = accent ? 1760 : 1320;
+  env(g, t, 0.18, 0.04);
+  o.connect(g); g.connect(master);
+  o.start(t); o.stop(t + 0.06);
+}
+// Context time of the sound that is reaching the speakers at performance time `perf`
+function audioNow(perf) {
+  if (ctx.getOutputTimestamp) {
+    const ts = ctx.getOutputTimestamp();
+    if (ts && ts.performanceTime > 0 && ts.contextTime > 0) return ts.contextTime + (perf - ts.performanceTime) / 1000;
+  }
+  return ctx.currentTime - (ctx.outputLatency || 0);
+}
+function songTime(perf) { return audioNow(perf) - run.songStart - latencyMs / 1000; }
 
-                elements.startButton.disabled = true; elements.demoButton.disabled = true; elements.recordModeBtn.disabled = true; elements.restartButton.disabled = false;
-                elements.messageDisplay.textContent = '🎶 Демо...'; elements.scoreDisplay.textContent = 'DEMO';
-                
-                const startMusicTimeout = setTimeout(() => {
-                    currentBGM.play().then(() => {
-                        gameStartTime = performance.now();
-                        startBeatIndicator(); 
-                        if (currentBGM.duration) currentBGM.onended = endDemoMode;
-                    });
-                }, totalStartDelay);
-                rhythmTimeouts.push(startMusicTimeout);
-                
-                scheduleNotes(rhythm, scheduledMusicStartTime, syncCorrection);
-            });
-        }
-        
-        function endDemoMode() {
-             currentBGM.pause(); currentBGM.onended = null; isDemoMode = false;
-             clearInterval(gameTimer); clearTimeout(beatTimer); rhythmTimeouts.forEach(clearTimeout); rhythmTimeouts = [];
-             scheduledSources.forEach(source => { try { source.stop(); } catch (e) {} }); scheduledSources = [];
-             notesOnScreen.forEach(note => { if (note.element.parentNode) note.element.remove(); if (note.fallTimer) clearTimeout(note.fallTimer); });
-             notesOnScreen = []; Object.values(drumPads).forEach(pad => pad.classList.remove('auto-flash'));
-             elements.messageDisplay.textContent = 'Демо завершено.'; elements.scoreDisplay.textContent = 0;
-             checkAudioReady(); elements.restartButton.disabled = true; elements.startButton.textContent = 'Почати';
-        }
+/* ---------- UI: levels and one-bar score ---------- */
+const levelsEl = $('levels');
+LEVELS.forEach((L, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'lvl'; b.dataset.i = i;
+  const t = document.createElement('b'); t.textContent = (i + 1) + ' · ' + L.title;
+  const s = document.createElement('span'); s.textContent = Math.round(L.bpm) + ' BPM';
+  b.append(t, s);
+  b.addEventListener('click', () => selectLevel(i));
+  levelsEl.appendChild(b);
+});
+function renderBar() {
+  const box = $('bar-score'); box.textContent = '';
+  const lab = (txt) => { const d = document.createElement('div'); d.className = 'lab'; d.textContent = txt; box.appendChild(d); };
+  lab('рахунок');
+  COUNT_WORDS.forEach((w, i) => { const d = document.createElement('div'); d.className = 'cnt' + (i % 2 === 0 ? ' on' : ''); d.textContent = w; box.appendChild(d); });
+  [['бочка', 'k'], ['малий', 's']].forEach(([name, drum]) => {
+    lab(name);
+    for (let i = 0; i < 8; i++) {
+      const c = document.createElement('div'); c.className = 'cell';
+      const d = document.createElement('div'); d.className = 'dot ' + (level.pat[i] === drum ? drum : 'off');
+      c.appendChild(d); box.appendChild(c);
+    }
+  });
+  $('lvl-hint').textContent = level.hint;
+  $('lvl-bpm').textContent = Math.round(level.bpm) + ' BPM';
+}
+function selectLevel(i) {
+  if (mode !== 'idle') return;
+  level = LEVELS[i]; store.set('rk_level', i);
+  [...levelsEl.children].forEach((b, j) => b.setAttribute('aria-pressed', String(i === j)));
+  renderBar();
+  setHud(0, 0, null, level.last);
+  refreshReady();
+  drawIdle();
+}
 
-        function endGame(timedOut = false) {
-            currentBGM.pause(); currentBGM.onended = null; gameActive = false;
-            clearInterval(gameTimer); clearTimeout(beatTimer); rhythmTimeouts.forEach(clearTimeout); rhythmTimeouts = [];
-            scheduledSources.forEach(source => { try { source.stop(); } catch (e) {} }); scheduledSources = [];
-            Object.values(drumPads).forEach(pad => pad.classList.remove('auto-flash'));
-            checkAudioReady(); elements.startButton.textContent = 'Почати'; elements.restartButton.disabled = true;
-            if (timedOut) { elements.finalScoreDisplay.textContent = score; elements.saveScoreModal.classList.add('visible'); }
-        }
-        
-        function resetGame() {
-            if (currentBGM) { currentBGM.pause(); currentBGM.currentTime = 0; currentBGM.onended = null; }
-            gameActive = false; isDemoMode = false; isRecording = false; recordedHits = [];
-            if(recordAudio) { recordAudio.pause(); recordAudio.currentTime = 0; }
-            elements.recordModal.classList.remove('visible'); clearInterval(gameTimer); clearTimeout(beatTimer); 
-            rhythmTimeouts.forEach(clearTimeout); rhythmTimeouts = [];
-            scheduledSources.forEach(source => { try { source.stop(); } catch (e) {} }); scheduledSources = [];
-            notesOnScreen.forEach(note => { if (note.element.parentNode) note.element.remove(); if (note.fallTimer) clearTimeout(note.fallTimer); });
-            notesOnScreen = [];
-            elements.saveScoreModal.classList.remove('visible'); elements.statsModal.classList.remove('visible'); elements.passwordModal.classList.remove('visible');
-            score = 0; elements.scoreDisplay.textContent = 0; sessionLog = []; 
-            Object.values(drumPads).forEach(pad => pad.classList.remove('auto-flash'));
-            timeLeft = trackDuration; updateTimerDisplay(); checkAudioReady();
-            elements.restartButton.disabled = true;
-        }
-        
-        async function saveScore() {
-            const playerName = elements.playerNameInput.value.trim();
-            if (!playerName) { elements.saveScoreModal.querySelector('p.text-sm').textContent = "❌ Введіть ім'я!"; return; }
-            try {
-                await addDoc(collection(db, LEADERBOARD_COLLECTION_NAME), { name: playerName, score: score, style: currentExercise, timestamp: serverTimestamp() });
-                resetGame();
-                elements.leaderboardBtn.click();
-            } catch (error) { console.error("Error writing:", error); elements.saveScoreModal.querySelector('h2').textContent = "Помилка БД!"; }
-        }
-        
-        let unsubscribeLeaderboard = null;
-        function updateLeaderboardView(exercise) {
-            if (unsubscribeLeaderboard) { unsubscribeLeaderboard(); unsubscribeLeaderboard = null; }
-            const exerciseNum = exercise.replace('exercise', '');
-            elements.leaderboardView.querySelector('h1').textContent = `🏆 Таблиця лідерів (Вправа ${exerciseNum})`;
-            elements.leaderboardStyleControls.querySelectorAll('.control-btn').forEach(btn => {
-                 if (btn.dataset.style === exercise) btn.classList.add('active'); else btn.classList.remove('active');
-            });
-            const q = query(collection(db, LEADERBOARD_COLLECTION_NAME), where("style", "==", exercise), orderBy("score", "desc"), limit(10));
-            unsubscribeLeaderboard = onSnapshot(q, (snapshot) => {
-                elements.leaderboardList.innerHTML = '';
-                if (snapshot.empty) { elements.leaderboardList.innerHTML = '<p class="text-center p-4">Ще немає рекордів для цієї вправи.</p>'; return; }
-                let rank = 1; 
-                snapshot.forEach((doc) => { 
-                    const data = doc.data();
-                    const entry = document.createElement('div');
-                    entry.className = 'flex justify-between p-2 rounded-md';
-                    if((rank - 1) % 2 === 0) entry.classList.add('bg-slate-100');
-                    entry.innerHTML = `<div><span class="font-bold">${rank}. ${data.name}</span></div><span class="font-bold text-slate-800">${data.score}</span>`;
-                    elements.leaderboardList.appendChild(entry); rank++; 
-                });
-            }, (error) => {
-                console.error("Leaderboard error:", error);
-                if (error.message.includes("index")) { elements.leaderboardList.innerHTML = '<p class="text-center p-4 text-red-500">⚠️ <a href="#" style="text-decoration:underline;">Потрібно створити індекс (див. консоль)</a></p>'; } 
-                else { elements.leaderboardList.innerHTML = '<p class="text-center p-4 text-red-500">Помилка завантаження.</p>'; }
-            });
-        }
+/* ---------- HUD ---------- */
+const hud = { score: $('h-score'), combo: $('h-combo'), acc: $('h-acc'), time: $('h-time') };
+const hudCache = {};
+function put(el, key, v) { if (hudCache[key] !== v) { hudCache[key] = v; el.textContent = v; } }
+function fmtTime(s) { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function setHud(score, combo, acc, remain) {
+  put(hud.score, 's', String(score));
+  put(hud.combo, 'c', combo >= 10 ? combo + ' ×' + multFor(combo) : String(combo));
+  hud.combo.classList.toggle('hot', combo >= 10);
+  put(hud.acc, 'a', acc === null ? '—' : Math.round(acc) + '%');
+  put(hud.time, 't', fmtTime(remain));
+}
+function accuracy(c, total) {
+  const done = c.perfect + c.good + c.ok + c.miss;
+  if (!done && !c.extra) return null;
+  return 100 * (c.perfect + 0.7 * c.good + 0.4 * c.ok) / Math.max(1, done + 0.5 * c.extra);
+}
+const statusEl = $('status');
+function status(msg) { statusEl.textContent = msg; }
 
-        function showLeaderboard() {
-            elements.saveScoreModal.classList.remove('visible'); elements.statsModal.classList.remove('visible'); elements.recordModal.classList.remove('visible'); elements.passwordModal.classList.remove('visible');
-            elements.gameView.classList.add('hidden'); elements.leaderboardView.classList.remove('hidden');
-            updateLeaderboardView(currentExercise);
-        }
+function refreshReady() {
+  const busy = mode !== 'idle';
+  $('btn-stop').disabled = !(mode === 'play' || mode === 'demo');
+  [...levelsEl.children].forEach(b => { b.disabled = busy; });
+  $('btn-start').disabled = true; $('btn-demo').disabled = true;
+  if (busy) return;
+  const want = level;
+  status('Завантажую музику…');
+  loadTrack(level.track).then(() => {
+    if (level !== want || mode !== 'idle') return;
+    $('btn-start').disabled = false; $('btn-demo').disabled = false;
+    status('Натисни «Почати». Перед стартом буде 4 клацання.');
+  }).catch(() => {
+    if (level === want) status('Не вдалося завантажити музику. Перевір інтернет і онови сторінку.');
+  });
+}
 
-        function showSessionStatistics() {
-            elements.saveScoreModal.classList.remove('visible'); elements.statsModal.classList.add('visible');
-            const content = elements.statsContent; content.innerHTML = '';
-            if (sessionLog.length === 0) { content.innerHTML = '<p class="text-center text-slate-500 py-4">Журнал порожній.</p>'; return; }
-            const title = document.createElement('p'); title.className = 'text-sm font-bold text-slate-700 mb-2 border-b border-slate-300 pb-1'; title.textContent = `Всього подій: ${sessionLog.length}`; content.appendChild(title);
-            sessionLog.sort((a, b) => a.time - b.time);
-            sessionLog.forEach(log => {
-                const item = document.createElement('div'); item.className = 'stats-item flex justify-between';
-                const timeMs = log.time.toFixed(0); const timeSec = (log.time / 1000).toFixed(2);
-                let text = '', resultClass = '';
-                if (log.type === 'keyPress') {
-                    if (log.result === 'CORRECT') { text = `✅ Влучання: ${log.drum.toUpperCase()}`; resultClass = 'hit-correct'; } else { text = `🟠 Промах: ${log.drum.toUpperCase()}`; resultClass = 'key-miss'; }
-                } else if (log.type === 'missedNote') { text = `❌ Пропуск: ${log.drum.toUpperCase()}`; resultClass = 'hit-missed'; }
-                item.classList.add(resultClass); item.innerHTML = `<span class="font-medium">${text}</span><span class="timing-detail">${timeSec} с</span>`; content.appendChild(item);
-            });
-        }
-        
-        function handleMiss(note) {
-            animatePad(note.drum, 'hit-miss');
-            if (gameActive) { sessionLog.push({ type: 'missedNote', drum: note.drum, time: performance.now() - gameStartTime, result: 'MISSED', }); }
-        }
-        
-        function animatePad(drumName, result) {
-            const pad = drumPads[drumName]; if (!pad) return;
-            const baseClasses = pad.classList.contains('kick') ? 'drum-pad kick' : 'drum-pad snare';
-            pad.className = `${baseClasses} playing`; if (result) pad.classList.add(result); 
-            setTimeout(() => { pad.className = baseClasses; }, 200);
-        }
+/* ---------- Canvas ---------- */
+const canvas = $('hw');
+const g2 = canvas.getContext('2d');
+let W = 0, H = 0, DPR = 1, colors = {};
+const PADS_H = 96;
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  ['stage', 'stage-ink', 'kick', 'snare', 'sun', 'perfect', 'good', 'ok', 'bad'].forEach(k => { colors[k] = cs.getPropertyValue('--' + k).trim(); });
+  colors.fd = cs.getPropertyValue('--font-display').trim() || 'sans-serif';
+  colors.fb = cs.getPropertyValue('--font-body').trim() || 'sans-serif';
+}
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = r.width; H = r.height;
+  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+  g2.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (!run) drawIdle();
+}
+new ResizeObserver(resize).observe(canvas);
+readColors();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColors(); if (!run) drawIdle(); });
+new MutationObserver(() => { readColors(); if (!run) drawIdle(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-        // *** SPAWN NOTE (Центрування на лінії) ***
-        function spawnNote(drumName, absoluteHitTime) {
-            const laneElement = drumLanes[drumName]; if(!laneElement) return;
-            const noteElement = document.createElement('div'); noteElement.className = `note ${drumName}`;
-            laneElement.appendChild(noteElement);
-            
-            const note = { element: noteElement, drum: drumName, hasBeenHit: false, id: ++noteIdCounter, idealHitTime: absoluteHitTime, fallTimer: null };
-            notesOnScreen.push(note);
+function hitY() { return H - PADS_H - 22; }
+function laneX(l) { return W * (l === 0 ? 0.25 : 0.75); }
+function yFor(dt) { const hy = hitY(); return hy - (dt / FALL) * (hy + 24); }
 
-            // Математика: центруємо ноту (10px) відносно центру лінії (275px)
-            const NOTE_HEIGHT = 10;
-            const TARGET_Y_CENTER = HIT_LINE_Y; 
-            const TARGET_TOP = TARGET_Y_CENTER - (NOTE_HEIGHT / 2); 
-            const START_TOP = NOTE_START_Y; 
-            
-            const TOTAL_DISTANCE = TARGET_TOP - START_TOP; 
-            const speedPxPerMs = TOTAL_DISTANCE / FIXED_FALL_DURATION_MS;
-            
-            const laneHeight = elements.laneContainer.clientHeight || 310;
-            const END_Y = laneHeight + 50;
-            const FULL_ANIMATION_DISTANCE = END_Y - START_TOP;
-            const FULL_ANIMATION_DURATION = FULL_ANIMATION_DISTANCE / speedPxPerMs;
+function roundRect(x, y, w, h, r) {
+  g2.beginPath();
+  g2.moveTo(x + r, y); g2.arcTo(x + w, y, x + w, y + h, r); g2.arcTo(x + w, y + h, x, y + h, r);
+  g2.arcTo(x, y + h, x, y, r); g2.arcTo(x, y, x + w, y, r); g2.closePath();
+}
+function alpha(hexOrRgb, a) {
+  const c = hexOrRgb.replace('#', '');
+  if (c.length === 6) { const n = parseInt(c, 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+  return hexOrRgb;
+}
 
-            setTimeout(() => {
-                 noteElement.style.transition = `transform ${FULL_ANIMATION_DURATION}ms linear`;
-                 noteElement.style.transform = `translateY(${FULL_ANIMATION_DISTANCE}px)`;
-            }, 20);
+function drawScene(st, opts) {
+  const hy = hitY();
+  g2.clearRect(0, 0, W, H);
+  g2.fillStyle = colors.stage; g2.fillRect(0, 0, W, H);
+  // lane tint + press flash
+  for (let l = 0; l < 2; l++) {
+    const col = l === 0 ? colors.kick : colors.snare;
+    const grd = g2.createLinearGradient(0, 0, 0, hy);
+    grd.addColorStop(0, alpha(col, 0));
+    grd.addColorStop(1, alpha(col, 0.10 + (opts.flash ? opts.flash[l] : 0) * 0.35));
+    g2.fillStyle = grd; g2.fillRect(l * W / 2, 0, W / 2, hy);
+  }
+  g2.fillStyle = alpha('#ffffff', 0.08); g2.fillRect(W / 2 - 0.5, 0, 1, hy);
 
-            note.fallTimer = setTimeout(() => {
-                 if (!note.hasBeenHit) handleMiss(note);
-                 if (noteElement.parentNode) noteElement.remove();
-                 notesOnScreen = notesOnScreen.filter(n => n !== note);
-            }, FULL_ANIMATION_DURATION);
-        }
+  // beat lines with count numbers
+  const L = opts.level;
+  const kFrom = Math.ceil((st - 0.4 - L.t0) / L.P), kTo = Math.floor((st + FALL - L.t0) / L.P);
+  g2.font = `600 12px ${colors.fd}`;
+  g2.textAlign = 'left'; g2.textBaseline = 'middle';
+  for (let k = kFrom; k <= kTo; k++) {
+    const t = L.t0 + k * L.P, y = yFor(t - st);
+    if (y < -10 || y > hy) continue;
+    const beatInBar = mod(2 * k - L.phase, 8) / 2;
+    const down = beatInBar === 0;
+    g2.fillStyle = alpha('#ffffff', down ? 0.22 : 0.08);
+    g2.fillRect(0, Math.round(y) - (down ? 1 : 0.5), W, down ? 2 : 1);
+    g2.fillStyle = alpha('#ffffff', down ? 0.55 : 0.3);
+    g2.fillText(String(beatInBar + 1), 8, y - 8);
+  }
 
-        function handleKeyPress(drumName) {
-            if (isRecording) {
-                const hitTime = Math.round(performance.now() - recordStartTime);
-                recordedHits.push({ time: hitTime, drum: drumName });
-                animatePad(drumName, 'hit-correct'); playSound(drumName); return;
-            }
-            if (isDemoMode) return; 
-            if (!gameActive) { playSound(drumName); animatePad(drumName); return; }
-            playSound(drumName);
-            let hitsCount = 0; const pressTime = performance.now(); 
-            for (let i = notesOnScreen.length - 1; i >= 0; i--) {
-                const note = notesOnScreen[i];
-                if (note.drum === drumName && !note.hasBeenHit) {
-                    const timeDifference = Math.abs(pressTime - note.idealHitTime);
-                    if (timeDifference < TIMING_TOLERANCE_MS) {
-                        hitsCount++; note.hasBeenHit = true; note.element.classList.add('correct-hit');
-                        if (note.fallTimer) clearTimeout(note.fallTimer);
-                        setTimeout(() => { note.element.remove(); notesOnScreen = notesOnScreen.filter(n => n !== note); }, 50); 
-                        break; 
-                    }
-                }
-            }
-            sessionLog.push({ type: 'keyPress', drum: drumName, time: pressTime - gameStartTime, result: hitsCount > 0 ? 'CORRECT' : 'MISSED_KEY', hitCount: hitsCount, });
-            if (hitsCount > 0) { score += hitsCount; elements.scoreDisplay.textContent = score; animatePad(drumName, 'hit-correct'); } else { animatePad(drumName, 'hit-miss'); }
-        }
-        
-        function generateRhythmOutput() {
-            if (recordedHits.length === 0) return "// Немає записаних ударів.";
-            const formattedHits = recordedHits.map(hit => `{ time: ${hit.time}, drum: '${hit.drum}' }`).join(', ');
-            return `// Отриманий ритм:\n[\n    ${formattedHits}\n]`;
-        }
+  // hit line: a horizon with the studio's sun rising from it
+  const beatPos = (st - L.t0) / L.P;
+  const frac = beatPos - Math.floor(beatPos);
+  const isDown = mod(2 * Math.floor(beatPos) - L.phase, 8) === 0;
+  const pulse = (opts.running && st > L.first - 4 * L.P - 0.05) ? Math.exp(-frac * 7) * (isDown ? 1 : 0.6) : 0;
+  const sun = colors.sun;
+  g2.save();
+  g2.shadowColor = sun; g2.shadowBlur = 10 + pulse * 16;
+  g2.fillStyle = sun; g2.fillRect(0, hy - 1.5, W, 3);
+  g2.restore();
+  const cx = W / 2, rr = 15 + pulse * 3;
+  g2.beginPath(); g2.arc(cx, hy, rr, Math.PI, 0); g2.strokeStyle = sun; g2.lineWidth = 2.5; g2.stroke();
+  g2.fillStyle = alpha(sun, 0.18 + pulse * 0.4); g2.fill();
+  for (let i = 0; i < 5; i++) {
+    const a = Math.PI + (i + 1) * Math.PI / 6;
+    const r1 = rr + 5, r2 = rr + 10 + pulse * 6;
+    g2.beginPath();
+    g2.moveTo(cx + Math.cos(a) * r1, hy + Math.sin(a) * r1);
+    g2.lineTo(cx + Math.cos(a) * r2, hy + Math.sin(a) * r2);
+    g2.lineWidth = 2.5; g2.lineCap = 'round'; g2.stroke();
+  }
 
-        function openRecordModal() {
-            resetGame(); elements.recordStartBtn.disabled = false; elements.recordStopBtn.disabled = true;
-            elements.recordMessage.textContent = 'Оберіть трек і натисніть "Почати запис".';
-            elements.recordResultContainer.classList.add('hidden'); elements.recordModal.classList.add('visible'); 
-            document.querySelectorAll('.record-track-btn').forEach(btn => { const style = btn.dataset.style; btn.textContent = `Трек ${style.replace('exercise', '')} (${GAME_DURATION_SECONDS_MAP[style]} с)`; });
-        }
-        function startRecordMode() {
-            if (!recordAudio || !soundsReady || !bgmReady[recordAudio.id]) { elements.recordMessage.textContent = '❌ Не готово.'; return; }
-            isRecording = true; recordedHits = []; recordStartTime = performance.now();
-            elements.recordMessage.textContent = '🔴 ЙДЕ ЗАПИС...'; elements.recordStartBtn.disabled = true; elements.recordStopBtn.disabled = false; elements.recordResultContainer.classList.add('hidden');
-            audioContext.resume().then(() => {
-                 recordAudio.currentTime = 0;
-                 recordAudio.play().catch(() => { isRecording = false; elements.recordStartBtn.disabled = false; elements.recordStopBtn.disabled = true; });
-                 recordAudio.onended = () => { stopRecordMode(); };
-            });
-        }
-        function stopRecordMode() {
-            if (!isRecording) return; 
-            if (recordAudio) { recordAudio.pause(); recordAudio.currentTime = 0; recordAudio.onended = null; }
-            isRecording = false; elements.recordMessage.textContent = '✅ ЗАПИС ЗБЕРЕЖЕНО.'; elements.recordStartBtn.disabled = false; elements.recordStopBtn.disabled = true; 
-            elements.recordedRhythmOutput.value = generateRhythmOutput(); elements.recordResultContainer.classList.remove('hidden');
-        }
-        function handleRecordTrackSelection(event) {
-            const target = event.target.closest('.record-track-btn'); if (!target || isRecording) return; 
-            document.querySelectorAll('.record-track-btn').forEach(btn => btn.classList.remove('active')); target.classList.add('active');
-            const trackId = target.dataset.trackId; recordAudio = elements[trackId];
-            if (soundsReady && bgmReady[trackId]) { elements.recordStartBtn.disabled = false; elements.recordMessage.textContent = 'Трек готовий.'; } 
-            else { elements.recordStartBtn.disabled = true; elements.recordMessage.textContent = 'Завантаження...'; }
-            elements.recordResultContainer.classList.add('hidden');
-        }
-        
-        function openPasswordModal() { if (gameActive || isDemoMode) return; elements.passwordInput.value = ''; elements.passwordMessage.textContent = ''; elements.passwordModal.classList.add('visible'); elements.passwordInput.focus(); }
-        function checkPassword() { if (elements.passwordInput.value === CORRECT_PASSWORD) { elements.passwordModal.classList.remove('visible'); openRecordModal(); } else { elements.passwordInput.value = ''; elements.passwordMessage.textContent = "Невірний пароль!"; } }
-        
-        function setupEventListeners() {
-            elements.startButton.addEventListener('click', () => { if (audioContext.state === 'suspended') { audioContext.resume().then(() => { if(!gameActive) startGame(); }); } else { if(!gameActive) startGame(); } });
-            elements.demoButton.addEventListener('click', () => { if (audioContext.state === 'suspended') { audioContext.resume().then(() => { if(!isDemoMode) startDemoMode(); }); } else { if(!isDemoMode) startDemoMode(); } }); 
-            elements.restartButton.addEventListener('click', resetGame); 
-            elements.leaderboardBtn.addEventListener('click', showLeaderboard); 
-            elements.backToGameBtn.addEventListener('click', () => { 
-                elements.leaderboardView.classList.add('hidden'); elements.gameView.classList.remove('hidden'); 
-                if (unsubscribeLeaderboard) { unsubscribeLeaderboard(); unsubscribeLeaderboard = null; }
-                resetGame(); 
-            });
-            elements.saveScoreBtn.addEventListener('click', saveScore); elements.cancelSaveBtn.addEventListener('click', resetGame); elements.showStatsBtn.addEventListener('click', showSessionStatistics); 
-            elements.closeStatsBtn.addEventListener('click', () => { elements.statsModal.classList.remove('visible'); elements.saveScoreModal.classList.add('visible'); });
-            elements.styleControls.querySelectorAll('.control-btn').forEach(btn => { 
-                btn.addEventListener('click', (e) => { const style = e.currentTarget.dataset.style; if (style === currentExercise) return; elements.styleControls.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active')); e.currentTarget.classList.add('active'); setCurrentExercise(style); }); 
-            });
-            elements.leaderboardStyleControls.querySelectorAll('.leaderboard-filter-btn').forEach(btn => {
-                 btn.addEventListener('click', (e) => {
-                     const style = e.currentTarget.dataset.style;
-                     updateLeaderboardView(style);
-                 });
-            });
-            elements.recordModeBtn.addEventListener('click', openPasswordModal); elements.passwordEnterBtn.addEventListener('click', checkPassword); elements.passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPassword(); }); elements.passwordCancelBtn.addEventListener('click', () => elements.passwordModal.classList.remove('visible'));
-            elements.recordTrackControls.addEventListener('click', handleRecordTrackSelection); elements.recordStartBtn.addEventListener('click', startRecordMode); elements.recordStopBtn.addEventListener('click', stopRecordMode); elements.recordCloseBtn.addEventListener('click', () => { stopRecordMode(); elements.recordModal.classList.remove('visible'); });
-            Object.values(drumPads).forEach(pad => { pad.addEventListener('click', () => handleKeyPress(pad.dataset.drum)); });
-            window.addEventListener('keydown', (e) => { if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return; const keyMap = { 'KeyD': 'kick', 'KeyF': 'snare' }; const drumToPlay = keyMap[e.code]; if (drumToPlay) handleKeyPress(drumToPlay); });
-        }
+  // notes
+  const notes = opts.notes;
+  const nw = Math.min(110, W * 0.3), nh = 16;
+  for (let i = 0; i < notes.length; i++) {
+    const n = notes[i];
+    const dt = n.t - st;
+    if (dt > FALL + 0.1) break;
+    if (n.res && n.res !== 'miss') continue;
+    if (dt < -0.6) continue;
+    const y = yFor(dt);
+    const x = laneX(n.lane) - nw / 2;
+    let col = n.lane === 0 ? colors.kick : colors.snare;
+    let a = 1;
+    if (n.res === 'miss') { col = '#8a857a'; a = Math.max(0, 1 + dt / 0.6) * 0.7; }
+    g2.globalAlpha = a;
+    roundRect(x, y - nh / 2, nw, nh, 8); g2.fillStyle = col; g2.fill();
+    g2.fillStyle = alpha('#ffffff', 0.35); roundRect(x + 6, y - nh / 2 + 3, nw - 12, 3, 1.5); g2.fill();
+    g2.globalAlpha = 1;
+  }
 
-        init();
-    </script>
+  // judgement bursts
+  if (opts.fx) {
+    const now = performance.now();
+    g2.textAlign = 'center'; g2.textBaseline = 'middle';
+    for (const f of opts.fx) {
+      const age = (now - f.at) / 1000;
+      if (age > 0.6) continue;
+      const x = laneX(f.lane);
+      const col = colors[f.kind] || colors.bad;
+      if (f.kind !== 'bad' && !reduceMotion.matches) {
+        g2.globalAlpha = Math.max(0, 1 - age / 0.3);
+        g2.beginPath(); g2.arc(x, hy, 18 + age * 160, 0, Math.PI * 2);
+        g2.strokeStyle = col; g2.lineWidth = 3; g2.stroke();
+      }
+      g2.globalAlpha = Math.max(0, 1 - age / 0.6);
+      const lift = reduceMotion.matches ? 0 : age * 40;
+      g2.font = `700 ${f.kind === 'perfect' ? 22 : 18}px ${colors.fd}`;
+      g2.fillStyle = col;
+      g2.fillText(f.text, x, hy - 46 - lift);
+      g2.globalAlpha = 1;
+    }
+  }
+
+  // centre message (count-in, idle hint)
+  if (opts.center) {
+    g2.textAlign = 'center'; g2.textBaseline = 'middle';
+    g2.fillStyle = colors['stage-ink'];
+    g2.shadowColor = 'rgba(0,0,0,.85)'; g2.shadowBlur = 14;
+    g2.font = `700 ${opts.centerSize || 64}px ${colors.fd}`;
+    g2.fillText(opts.center, W / 2, hy * 0.42);
+    if (opts.sub) {
+      g2.font = `500 15px ${colors.fb}`;
+      g2.fillStyle = alpha('#ffffff', 0.7);
+      g2.fillText(opts.sub, W / 2, hy * 0.42 + 44);
+    }
+    g2.shadowBlur = 0; g2.shadowColor = 'transparent';
+  }
+}
+function drawIdle() {
+  if (!W) return;
+  drawScene(level.first - FALL * 0.55, { level, notes: level.notes, running: false, center: level.title, centerSize: 30, sub: 'Ліва доріжка — бочка, права — малий' });
+}
+
+/* ---------- Game ---------- */
+async function start(demo) {
+  if (mode !== 'idle') return;
+  ensureCtx();
+  try { await ctx.resume(); } catch (e) { /* ignore */ }
+  let buf;
+  try { buf = await loadTrack(level.track); } catch (e) { status('Не вдалося завантажити музику.'); return; }
+  const L = level;
+  const lead = Math.max(FALL - L.first, 4 * L.P - L.first, 0) + 0.6;
+  const songStart = ctx.currentTime + lead;
+  const src = ctx.createBufferSource(); src.buffer = buf; src.connect(musicGain);
+  musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setValueAtTime(0.6, ctx.currentTime);
+  src.start(songStart);
+  const countIn = [];
+  for (let k = 4; k >= 1; k--) { const t = L.first - k * L.P; countIn.push(t); playClick(songStart + t, k === 4); }
+  run = {
+    level: L, demo, songStart, src, countIn,
+    notes: L.notes.map(n => ({ t: n.t, lane: n.lane, res: null, dt: 0, sched: false })),
+    score: 0, combo: 0, maxCombo: 0,
+    c: { perfect: 0, good: 0, ok: 0, miss: 0, extra: 0 },
+    dts: [[], []], fx: [], flash: [0, 0], ended: false
+  };
+  mode = demo ? 'demo' : 'play';
+  const hudEl = document.querySelector('.hud');
+  if (hudEl.getBoundingClientRect().top < 0 || $('stage').getBoundingClientRect().bottom > innerHeight) hudEl.scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  $('ov-result').hidden = true;
+  refreshReady();
+  status(demo ? 'Демо: слухай і дивись, як має звучати партія.' : 'Грай, коли нота торкається лінії.');
+  setHud(demo ? 'ДЕМО' : 0, 0, null, L.last);
+  try { wakeLock = navigator.wakeLock ? await navigator.wakeLock.request('screen') : null; } catch (e) { wakeLock = null; }
+  requestAnimationFrame(frame);
+}
+function addFx(lane, kind, text) { run.fx.push({ lane, kind, text, at: performance.now() }); if (run.fx.length > 12) run.fx.shift(); }
+function judgeHit(n, dt) {
+  const a = Math.abs(dt);
+  const kind = a <= WIN.perfect ? 'perfect' : a <= WIN.good ? 'good' : 'ok';
+  n.res = kind; n.dt = dt;
+  run.score += PTS[kind] * multFor(run.combo);
+  run.combo++; run.maxCombo = Math.max(run.maxCombo, run.combo);
+  run.c[kind]++;
+  run.dts[n.lane].push(dt);
+  const label = kind === 'perfect' ? 'Ідеально' : kind === 'good' ? 'Добре' : (dt < 0 ? 'Рано' : 'Пізно');
+  addFx(n.lane, kind, label);
+}
+function press(lane, perf) {
+  const pad = $('pad-' + lane);
+  pad.classList.add('down'); setTimeout(() => pad.classList.remove('down'), 90);
+  ensureCtx();
+  if (ctx.state !== 'running') ctx.resume();
+  if (mode === 'calib') { calibTap(perf); return; }
+  if (mode === 'demo') return;
+  playDrum(lane, ctx.currentTime);
+  if (mode === 'rec') { recTap(lane, perf); return; }
+  if (mode !== 'play' || !run) return;
+  run.flash[lane] = 1;
+  const st = songTime(perf);
+  if (st < run.level.first - 0.5) return;           // count-in: ignore
+  let best = null, bestA = Infinity;
+  for (const n of run.notes) {
+    if (n.res || n.lane !== lane) continue;
+    const a = Math.abs(st - n.t);
+    if (a < bestA) { bestA = a; best = n; }
+    if (n.t - st > WIN.ok) break;
+  }
+  if (best && bestA <= WIN.ok) {
+    judgeHit(best, st - best.t);
+  } else {
+    run.c.extra++; run.combo = 0; run.score = Math.max(0, run.score - 1);
+    addFx(lane, 'bad', 'Зайвий');
+  }
+}
+function frame(now) {
+  if (!run || run.ended) return;
+  const st = songTime(now);
+  const L = run.level;
+  for (const n of run.notes) {
+    if (n.res) continue;
+    if (run.demo) {
+      if (!n.sched && n.t - st < 0.25) { playDrum(n.lane, run.songStart + n.t); n.sched = true; }
+      if (n.t <= st) { n.res = 'perfect'; addFx(n.lane, 'perfect', ''); run.flash[n.lane] = 1; const p = $('pad-' + n.lane); p.classList.add('down'); setTimeout(() => p.classList.remove('down'), 90); }
+    } else if (st > n.t + WIN.ok) {
+      n.res = 'miss'; run.c.miss++; run.combo = 0;
+      addFx(n.lane, 'bad', 'Пропуск');
+    }
+    if (n.t > st + 0.3) break;
+  }
+  run.flash = run.flash.map(f => Math.max(0, f - 0.12));
+  let center = null, sub = null;
+  if (st < L.first - 0.05) {
+    const passed = run.countIn.filter(t => st >= t - 0.02).length;
+    center = passed ? String(5 - passed) : '…';
+    sub = passed ? null : 'Слухай клацання';
+  }
+  drawScene(st, { level: L, notes: run.notes, running: true, fx: run.fx, flash: run.flash, center });
+  if (!run.demo) setHud(run.score, run.combo, accuracy(run.c, L.notes.length), L.last - st);
+  else setHud('ДЕМО', 0, null, L.last - st);
+  if (st > L.last + 0.8) { finish(); return; }
+  requestAnimationFrame(frame);
+}
+function stopAudio(fade) {
+  if (!run) return;
+  const t = ctx.currentTime;
+  try {
+    if (fade) {
+      musicGain.gain.setValueAtTime(musicGain.gain.value, t);
+      musicGain.gain.linearRampToValueAtTime(0.0001, t + 0.6);
+      run.src.stop(t + 0.65);
+    } else { run.src.stop(); }
+  } catch (e) { /* already stopped */ }
+}
+function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (e) { /* ignore */ } wakeLock = null; }
+function finish() {
+  const r = run; r.ended = true;
+  stopAudio(true); releaseWake();
+  mode = 'idle'; run = null;
+  setTimeout(() => { if (musicGain && mode === 'idle') musicGain.gain.setValueAtTime(0.6, ctx.currentTime); }, 900);
+  refreshReady();
+  drawIdle();
+  if (r.demo) { status('Демо завершено. Тепер спробуй сам.'); setHud(0, 0, null, level.last); return; }
+  showResult(r);
+}
+function abort(msg) {
+  if (!run) return;
+  run.ended = true; stopAudio(false); releaseWake();
+  mode = 'idle'; run = null;
+  musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setValueAtTime(0.6, ctx.currentTime);
+  refreshReady(); setHud(0, 0, null, level.last); drawIdle();
+  if (msg) status(msg);
+}
+
+/* ---------- Result ---------- */
+function mean(a) { return a.reduce((s, x) => s + x, 0) / a.length; }
+function timingTip(name, dts) {
+  if (dts.length < 4) return null;
+  const m = Math.round(mean(dts) * 1000);
+  if (Math.abs(m) < 20) return `${name}: рівно в долю.`;
+  return m < 0 ? `${name}: поспішаєш у середньому на ${-m} мс.` : `${name}: запізнюєшся в середньому на ${m} мс.`;
+}
+function showResult(r) {
+  const L = r.level, c = r.c;
+  const acc = accuracy(c, L.notes.length) || 0;
+  const stars = acc >= 92 ? 3 : acc >= 80 ? 2 : acc >= 60 ? 1 : 0;
+  lastResult = { level: L.id, score: r.score, accuracy: Math.round(acc), saved: false };
+  $('r-level').textContent = 'Вправа ' + (LEVELS.indexOf(L) + 1) + ' · ' + L.title;
+  $('r-title').textContent = stars === 3 ? 'Чисто зіграно!' : stars === 2 ? 'Дуже добре!' : stars === 1 ? 'Непогано!' : 'Спробуй ще раз';
+  const starsEl = $('r-stars'); starsEl.textContent = '';
+  starsEl.setAttribute('aria-label', stars + ' з 3 зірок');
+  for (let i = 0; i < 3; i++) { const s = document.createElement('span'); s.textContent = '★'; if (i < stars) s.className = 'on'; starsEl.appendChild(s); }
+  $('r-score').textContent = r.score;
+  $('r-max').textContent = 'з ' + L.max + ' · точність ' + Math.round(acc) + '%';
+  const chips = $('r-chips'); chips.textContent = '';
+  [['Ідеально', c.perfect, 'perfect'], ['Добре', c.good, 'good'], ['Рано/пізно', c.ok, ''],
+   ['Пропущено', c.miss, c.miss ? 'bad' : ''], ['Зайві удари', c.extra, c.extra ? 'bad' : ''], ['Макс. комбо', r.maxCombo, '']]
+    .forEach(([label, v, cls]) => {
+      const d = document.createElement('div'); d.className = 'chip ' + cls;
+      const s = document.createElement('small'); s.textContent = label;
+      const b = document.createElement('b'); b.textContent = v;
+      d.append(s, b); chips.appendChild(d);
+    });
+  const tips = [timingTip('Бочка', r.dts[0]), timingTip('Малий', r.dts[1])].filter(Boolean);
+  if (c.extra > 5) tips.push('Багато зайвих ударів. Бий лише тоді, коли нота на лінії.');
+  if (c.miss > L.notes.length * 0.3) tips.push('Багато пропусків. Подивись «Демо» і рахуй уголос: раз-і-два-і.');
+  if (stars === 3 && LEVELS.indexOf(L) < LEVELS.length - 1) tips.push('Готовий до наступної вправи.');
+  if (!tips.length) tips.push('Зіграй ще раз і спробуй утримати комбо до кінця.');
+  const tl = $('r-tips'); tl.textContent = '';
+  tips.forEach(t => { const li = document.createElement('li'); li.textContent = t; tl.appendChild(li); });
+  $('save-err').textContent = '';
+  $('btn-save').disabled = r.score <= 0;
+  $('player-name').value = store.get('rk_name', '');
+  $('save-form').hidden = r.score <= 0;
+  $('ov-result').hidden = false;
+  status('Результат: ' + r.score + ' балів, точність ' + Math.round(acc) + '%.');
+}
+
+/* ---------- Leaderboard ---------- */
+function monthKey() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+const NAME_RE = /^[\p{L}\p{N}][\p{L}\p{N} .'’\-]{1,19}$/u;
+function cleanName(s) { return s.replace(/\s+/g, ' ').trim(); }
+
+const localBoard = {
+  mem: null,
+  load() { if (!this.mem) this.mem = store.get('rk_board_v2_local', []); return this.mem; },
+  async add(e) { const a = this.load(); a.push(e); store.set('rk_board_v2_local', a); },
+  async top(lv, period) {
+    const m = monthKey();
+    return this.load().filter(e => e.level === lv && (period === 'all' || e.month === m))
+      .sort((a, b) => b.score - a.score).slice(0, 10);
+  }
+};
+let fbPromise = null;
+function firebase() {
+  if (!fbPromise) {
+    const v = '10.12.2', base = 'https://www.gstatic.com/firebasejs/' + v + '/';
+    fbPromise = Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-firestore.js'), import(base + 'firebase-auth.js')])
+      .then(async ([appM, fs, au]) => {
+        const app = appM.initializeApp(FIREBASE);
+        try { await au.signInAnonymously(au.getAuth(app)); } catch (e) { console.warn('Anonymous sign-in failed', e); }
+        return { db: fs.getFirestore(app), fs };
+      });
+    fbPromise.catch(() => { fbPromise = null; });
+  }
+  return fbPromise;
+}
+const remoteBoard = {
+  async add(e) {
+    const { db, fs } = await firebase();
+    await fs.addDoc(fs.collection(db, BOARD_COLLECTION + '_' + e.level), { ...e, ts: fs.serverTimestamp() });
+  },
+  async top(lv, period) {
+    const { db, fs } = await firebase();
+    // One collection per exercise, so no composite Firestore indexes are needed.
+    const col = fs.collection(db, BOARD_COLLECTION + '_' + lv);
+    const q = period === 'month'
+      ? fs.query(col, fs.where('month', '==', monthKey()), fs.limit(500))
+      : fs.query(col, fs.orderBy('score', 'desc'), fs.limit(10));
+    const snap = await fs.getDocs(q);
+    return snap.docs.map(d => d.data()).sort((a, b) => b.score - a.score).slice(0, 10);
+  }
+};
+const board = IS_LIVE ? remoteBoard : localBoard;
+
+let boardLevel = level.id, boardPeriod = 'month';
+const bLevels = $('b-levels');
+LEVELS.forEach((L, i) => {
+  const b = document.createElement('button'); b.type = 'button'; b.dataset.id = L.id; b.textContent = 'Вправа ' + (i + 1);
+  b.addEventListener('click', () => { boardLevel = L.id; renderBoard(); });
+  bLevels.appendChild(b);
+});
+$('b-period').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  boardPeriod = b.dataset.p; renderBoard();
+});
+async function renderBoard() {
+  [...bLevels.children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === boardLevel)));
+  [...$('b-period').children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.p === boardPeriod)));
+  const list = $('b-list'); list.textContent = '';
+  const note = $('b-note');
+  note.textContent = 'Завантажую…';
+  try {
+    const rows = await board.top(boardLevel, boardPeriod);
+    list.textContent = '';
+    rows.forEach((r, i) => {
+      const li = document.createElement('li');
+      const cells = [['rk', (i + 1) + '.'], ['nm', String(r.name || 'Гравець')], ['ac', (r.accuracy != null ? r.accuracy + '%' : '')], ['sc', String(r.score)]];
+      cells.forEach(([cls, txt]) => { const s = document.createElement('span'); s.className = cls; s.textContent = txt; li.appendChild(s); });
+      list.appendChild(li);
+    });
+    note.textContent = rows.length ? '' : (boardPeriod === 'month' ? 'Цього місяця ще ніхто не грав цю вправу. Будь першим!' : 'Ще немає результатів.');
+    if (!IS_LIVE) note.textContent = (note.textContent ? note.textContent + ' ' : '') + 'Тестовий режим: результати зберігаються лише на цьому пристрої.';
+  } catch (e) {
+    console.error('Leaderboard error', e);
+    note.textContent = 'Таблиця тимчасово недоступна. Спробуй пізніше.';
+  }
+}
+function openBoard(lvId) {
+  boardLevel = lvId || level.id;
+  $('ov-result').hidden = true;
+  $('ov-board').hidden = false;
+  renderBoard();
+}
+
+$('save-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!lastResult || lastResult.saved) return;
+  const name = cleanName($('player-name').value);
+  const err = $('save-err');
+  if (!NAME_RE.test(name)) { err.textContent = 'Ім\'я: від 2 до 20 букв або цифр.'; return; }
+  err.textContent = '';
+  $('btn-save').disabled = true;
+  store.set('rk_name', name);
+  try {
+    await board.add({ name, score: lastResult.score, accuracy: lastResult.accuracy, level: lastResult.level, month: monthKey() });
+    lastResult.saved = true;
+    openBoard(lastResult.level);
+  } catch (ex) {
+    console.error(ex);
+    err.textContent = 'Не вдалося зберегти. Перевір інтернет і спробуй ще раз.';
+    $('btn-save').disabled = false;
+  }
+});
+
+/* ---------- Calibration ---------- */
+let calib = null;
+function setLatency(ms) {
+  latencyMs = Math.max(-100, Math.min(400, Math.round(ms / 5) * 5));
+  $('c-range').value = latencyMs; $('c-val').textContent = latencyMs + ' мс';
+  store.set('rk_latency_ms', latencyMs);
+}
+function openCalib() { if (mode !== 'idle') return; setLatency(latencyMs); $('c-msg').textContent = ''; $('ov-calib').hidden = false; }
+function closeCalib() { if (mode === 'calib') mode = 'idle'; calib = null; $('ov-calib').hidden = true; refreshReady(); }
+async function runCalib() {
+  ensureCtx(); try { await ctx.resume(); } catch (e) { /* ignore */ }
+  mode = 'calib';
+  const t0 = ctx.currentTime + 0.6, step = 0.6, n = 10;
+  calib = { clicks: [], taps: [] };
+  for (let i = 0; i < n; i++) { const t = t0 + i * step; calib.clicks.push(t); playClick(t, i % 4 === 0); }
+  $('c-msg').textContent = 'Тапай в такт клацанням…';
+  $('c-run').disabled = true;
+  setTimeout(() => {
+    $('c-run').disabled = false;
+    if (!calib) return;
+    const d = [];
+    calib.taps.forEach(tp => {
+      let best = Infinity;
+      calib.clicks.forEach((c, i) => { if (i >= 2 && Math.abs(tp - c) < Math.abs(best)) best = tp - c; });
+      if (Math.abs(best) < 0.3) d.push(best);
+    });
+    mode = 'idle';
+    if (d.length < 4) { $('c-msg').textContent = 'Замало тапів. Спробуй ще раз і тапай на кожне клацання.'; return; }
+    d.sort((a, b) => a - b);
+    const med = d[Math.floor(d.length / 2)] * 1000;
+    setLatency(med);
+    $('c-msg').textContent = 'Готово. Затримка ' + latencyMs + ' мс збережена для цього пристрою.';
+  }, (0.6 + n * step + 0.5) * 1000);
+}
+function calibTap(perf) { if (calib) calib.taps.push(audioNow(perf)); }
+$('c-run').addEventListener('click', runCalib);
+$('c-reset').addEventListener('click', () => { setLatency(0); $('c-msg').textContent = 'Затримку скинуто.'; });
+$('c-close').addEventListener('click', closeCalib);
+$('c-range').addEventListener('input', e => setLatency(+e.target.value));
+$('c-tap').addEventListener('pointerdown', e => { e.preventDefault(); if (mode === 'calib') { calibTap(e.timeStamp); playClick(ctx.currentTime, false); } });
+
+/* ---------- Dev: rhythm recorder (open with #dev) ---------- */
+let rec = null;
+async function recStart() {
+  ensureCtx(); try { await ctx.resume(); } catch (e) { /* ignore */ }
+  const buf = await loadTrack(level.track);
+  const songStart = ctx.currentTime + 0.4;
+  const src = ctx.createBufferSource(); src.buffer = buf; src.connect(musicGain); src.start(songStart);
+  rec = { src, songStart, hits: [] };
+  mode = 'rec';
+  $('d-rec').disabled = true; $('d-stop').disabled = false; $('d-out').value = 'Йде запис…';
+  src.onended = () => { if (mode === 'rec') recStop(); };
+}
+function recTap(lane, perf) { if (rec) rec.hits.push({ t: audioNow(perf) - rec.songStart - latencyMs / 1000, lane }); }
+function recStop() {
+  if (!rec) return;
+  try { rec.src.stop(); } catch (e) { /* ignore */ }
+  mode = 'idle';
+  const L = level;
+  const out = rec.hits.map(h => ({ ms: Math.round(h.t * 1000), drum: h.lane ? 'snare' : 'kick', eighth: Math.round((h.t - L.t0) / (L.P / 2)) }));
+  $('d-out').value = JSON.stringify({ track: L.track, bpm: L.bpm, t0: L.t0, hits: out }, null, 1);
+  $('d-rec').disabled = false; $('d-stop').disabled = true;
+  rec = null;
+}
+$('d-rec').addEventListener('click', recStart);
+$('d-stop').addEventListener('click', recStop);
+$('d-copy').addEventListener('click', () => {
+  const ta = $('d-out');
+  navigator.clipboard.writeText(ta.value).catch(() => { ta.focus(); ta.select(); });
+});
+$('d-close').addEventListener('click', () => { recStop(); $('ov-dev').hidden = true; refreshReady(); });
+if (DEV) { window.__rk = { get run() { return run; }, songTime: p => songTime(p) }; $('btn-dev').hidden = false; $('btn-dev').addEventListener('click', () => { if (mode === 'idle') $('ov-dev').hidden = false; }); }
+
+/* ---------- Input ---------- */
+[0, 1].forEach(l => {
+  $('pad-' + l).addEventListener('pointerdown', e => { e.preventDefault(); press(l, e.timeStamp); });
+});
+const KEYS = { KeyD: 0, KeyJ: 0, ArrowLeft: 0, KeyF: 1, KeyK: 1, ArrowRight: 1 };
+window.addEventListener('keydown', e => {
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (e.key === 'Escape') {
+    ['ov-result', 'ov-board'].forEach(id => { $(id).hidden = true; });
+    if (!$('ov-calib').hidden) closeCalib();
+    return;
+  }
+  if (e.code === 'Space' && mode === 'calib') { e.preventDefault(); if (!e.repeat) { calibTap(e.timeStamp); playClick(ctx.currentTime, false); } return; }
+  if (!(e.code in KEYS)) return;
+  e.preventDefault();
+  if (e.repeat) return;
+  press(KEYS[e.code], e.timeStamp);
+});
+$('btn-start').addEventListener('click', () => start(false));
+$('btn-demo').addEventListener('click', () => start(true));
+$('btn-stop').addEventListener('click', () => abort('Зупинено.'));
+$('btn-again').addEventListener('click', () => { $('ov-result').hidden = true; start(false); });
+$('btn-close-r').addEventListener('click', () => { $('ov-result').hidden = true; });
+$('btn-board').addEventListener('click', () => openBoard());
+$('btn-close-b').addEventListener('click', () => { $('ov-board').hidden = true; });
+$('btn-calib').addEventListener('click', openCalib);
+$('book').href = BOOKING_URL;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && (mode === 'play' || mode === 'demo')) abort('Гру зупинено, бо вкладку згорнули.');
+});
+
+/* ---------- Boot ---------- */
+ensureCtx();
+selectLevel(LEVELS.indexOf(level));
+resize();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!run) drawIdle(); });
+})();
+</script>
+
 </body>
 </html>
