@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Jost:wght@500;600;700&display=swap">
 <style>
-/* Layout: one-screen phone app. Header, level picker with a one-bar score, HUD, the stage (highway onto a sunrise hit line), controls, footer links. */
+/* Layout: one-screen phone app. Header, level picker with a one-bar score, HUD, the stage (highway onto a pulsing yellow hit line), controls, footer links. */
 :root {
   --paper: #fbfaf6;
   --card: #ffffff;
@@ -156,6 +156,7 @@ body {
 :root[data-theme="dark"] .chip.perfect b { color: var(--sun); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip.perfect b { color: var(--sun); } }
 .tips { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--sun-soft); display: grid; gap: 6px; list-style: none; font-size: 14px; }
+.tips.howto { gap: 10px; font-size: 15px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .row > * { flex: 1 1 120px; }
 input[type="text"] {
@@ -228,7 +229,8 @@ textarea { width: 100%; box-sizing: border-box; min-height: 140px; font: 12px/1.
 
   <footer class="links">
     <button class="btn" id="btn-board" type="button">Таблиця лідерів</button>
-    <button class="btn" id="btn-calib" type="button">Затримка звуку</button>
+    <button class="btn" id="btn-howto" type="button">Як грати</button>
+    <button class="btn wide" id="btn-calib" type="button">Калібрування (якщо звук запізнюється)</button>
     <a class="btn primary wide" id="book" href="https://n813529.alteg.io/" target="_blank" rel="noopener">Записатись на урок</a>
     <button class="btn wide" id="btn-dev" type="button" hidden>Запис ритму (розробник)</button>
     <a class="back wide" href="https://max-vorozhko.github.io/rankova_usefull/">← Усі ігри Rankova Studio</a>
@@ -271,9 +273,27 @@ textarea { width: 100%; box-sizing: border-box; min-height: 140px; font: 12px/1.
   </div>
 </div>
 
+<div class="overlay" id="ov-howto" hidden role="dialog" aria-modal="true" aria-labelledby="hw-title">
+  <div class="panel">
+    <h2 id="hw-title">Як грати</h2>
+    <ul class="tips howto">
+      <li><b>1.</b> Згори падають ноти. Червоні в лівій доріжці — бочка, сині в правій — малий барабан.</li>
+      <li><b>2.</b> Бий по паду саме тоді, коли нота торкається <b>жовтої лінії</b> внизу. Раніше чи пізніше — менше балів.</li>
+      <li><b>3.</b> Перед стартом прозвучать 4 клацання: це темп пісні. Рахуй разом з ними.</li>
+      <li><b>4.</b> Зайві удари знімають бали, тому не бий наосліп.</li>
+    </ul>
+    <p class="muted">Граєш у Bluetooth-навушниках? Звук у них запізнюється. Пройди калібрування, щоб гра це врахувала.</p>
+    <div class="row">
+      <button class="btn primary" id="hw-demo" type="button">Подивитись демо</button>
+      <button class="btn" id="hw-play" type="button">Одразу грати</button>
+    </div>
+    <button class="btn" id="hw-calib" type="button">Калібрування</button>
+  </div>
+</div>
+
 <div class="overlay" id="ov-calib" hidden role="dialog" aria-modal="true" aria-labelledby="c-title">
   <div class="panel">
-    <h2 id="c-title">Затримка звуку</h2>
+    <h2 id="c-title">Калібрування</h2>
     <p class="muted">Bluetooth-навушники та колонки запізнюються на 0,1–0,3 с. Натисни «Слухати», потім тапай по великій кнопці в такт клацанням. Гра врахує затримку.</p>
     <button class="btn tap" id="c-tap" type="button">Тап</button>
     <p id="c-msg" class="muted" role="status"></p>
@@ -508,7 +528,7 @@ function refreshReady() {
   loadTrack(level.track).then(() => {
     if (level !== want || mode !== 'idle') return;
     $('btn-start').disabled = false; $('btn-demo').disabled = false;
-    status('Натисни «Почати». Перед стартом буде 4 клацання.');
+    status(store.get('rk_howto_seen', false) ? 'Натисни «Почати». Перед стартом буде 4 клацання.' : 'Вперше тут? Натисни «Почати», і гра пояснить правила.');
   }).catch(() => {
     if (level === want) status('Не вдалося завантажити музику. Перевір інтернет і онови сторінку.');
   });
@@ -584,26 +604,27 @@ function drawScene(st, opts) {
     g2.fillText(String(beatInBar + 1), 8, y - 8);
   }
 
-  // hit line: a horizon with the studio's sun rising from it
+  // hit line: a yellow line that pulses on every beat, with target rings in each lane
   const beatPos = (st - L.t0) / L.P;
   const frac = beatPos - Math.floor(beatPos);
   const isDown = mod(2 * Math.floor(beatPos) - L.phase, 8) === 0;
   const pulse = (opts.running && st > L.first - 4 * L.P - 0.05) ? Math.exp(-frac * 7) * (isDown ? 1 : 0.6) : 0;
   const sun = colors.sun;
+  const thick = 3 + pulse * 3;
   g2.save();
-  g2.shadowColor = sun; g2.shadowBlur = 10 + pulse * 16;
-  g2.fillStyle = sun; g2.fillRect(0, hy - 1.5, W, 3);
+  g2.shadowColor = sun; g2.shadowBlur = 10 + pulse * 18;
+  g2.fillStyle = sun; g2.fillRect(0, hy - thick / 2, W, thick);
   g2.restore();
-  const cx = W / 2, rr = 15 + pulse * 3;
-  g2.beginPath(); g2.arc(cx, hy, rr, Math.PI, 0); g2.strokeStyle = sun; g2.lineWidth = 2.5; g2.stroke();
-  g2.fillStyle = alpha(sun, 0.18 + pulse * 0.4); g2.fill();
-  for (let i = 0; i < 5; i++) {
-    const a = Math.PI + (i + 1) * Math.PI / 6;
-    const r1 = rr + 5, r2 = rr + 10 + pulse * 6;
-    g2.beginPath();
-    g2.moveTo(cx + Math.cos(a) * r1, hy + Math.sin(a) * r1);
-    g2.lineTo(cx + Math.cos(a) * r2, hy + Math.sin(a) * r2);
-    g2.lineWidth = 2.5; g2.lineCap = 'round'; g2.stroke();
+  const tw = Math.min(110, W * 0.3) + 8;
+  for (let l = 0; l < 2; l++) {
+    roundRect(laneX(l) - tw / 2, hy - 12, tw, 24, 12);
+    g2.strokeStyle = alpha(sun, 0.55 + pulse * 0.45); g2.lineWidth = 2; g2.stroke();
+  }
+  if (!opts.running || st < L.first - 0.2) {
+    g2.textAlign = 'center'; g2.textBaseline = 'bottom';
+    g2.font = `600 13px ${colors.fb}`;
+    g2.fillStyle = sun;
+    g2.fillText('Бий, коли нота торкнеться жовтої лінії', W / 2, hy - 18);
   }
 
   // notes
@@ -672,6 +693,7 @@ function drawIdle() {
 /* ---------- Game ---------- */
 async function start(demo) {
   if (mode !== 'idle') return;
+  if (!demo && !store.get('rk_howto_seen', false)) { $('ov-howto').hidden = false; return; }
   ensureCtx();
   try { await ctx.resume(); } catch (e) { /* ignore */ }
   let buf;
@@ -1033,6 +1055,7 @@ window.addEventListener('keydown', e => {
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
   if (e.key === 'Escape') {
     ['ov-result', 'ov-board'].forEach(id => { $(id).hidden = true; });
+    if (!$('ov-howto').hidden) closeHowto();
     if (!$('ov-calib').hidden) closeCalib();
     return;
   }
@@ -1050,6 +1073,11 @@ $('btn-close-r').addEventListener('click', () => { $('ov-result').hidden = true;
 $('btn-board').addEventListener('click', () => openBoard());
 $('btn-close-b').addEventListener('click', () => { $('ov-board').hidden = true; });
 $('btn-calib').addEventListener('click', openCalib);
+function closeHowto() { $('ov-howto').hidden = true; store.set('rk_howto_seen', true); }
+$('btn-howto').addEventListener('click', () => { if (mode === 'idle') $('ov-howto').hidden = false; });
+$('hw-demo').addEventListener('click', () => { closeHowto(); start(true); });
+$('hw-play').addEventListener('click', () => { closeHowto(); start(false); });
+$('hw-calib').addEventListener('click', () => { closeHowto(); openCalib(); });
 $('book').href = BOOKING_URL;
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && (mode === 'play' || mode === 'demo')) abort('Гру зупинено, бо вкладку згорнули.');
