@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="41ebbb7b-39a4-490c-b748-1b4c177747cc" data-domains="max-vorozhko.github.io"></script>
 <title>Драм Тренажер Rankova</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Драм тренажер Rankova Studio: падаючі ноти, три вправи, таблиця лідерів.">
@@ -231,7 +232,7 @@ textarea { width: 100%; box-sizing: border-box; min-height: 140px; font: 12px/1.
     <button class="btn" id="btn-board" type="button">Таблиця лідерів</button>
     <button class="btn" id="btn-howto" type="button">Як грати</button>
     <button class="btn wide" id="btn-calib" type="button">Калібрування (якщо звук запізнюється)</button>
-    <a class="btn primary wide" id="book" href="https://n813529.alteg.io/" target="_blank" rel="noopener">Записатись на урок</a>
+    <a class="btn primary wide" id="book" data-umami-event="Запис на урок" data-umami-event-game="drum-trainer" href="https://n813529.alteg.io/" target="_blank" rel="noopener">Записатись на урок</a>
     <button class="btn wide" id="btn-dev" type="button" hidden>Запис ритму (розробник)</button>
     <a class="back wide" href="https://max-vorozhko.github.io/rankova_usefull/">← Усі ігри Rankova Studio</a>
   </footer>
@@ -370,6 +371,7 @@ LEVELS.forEach(L => {
 function mod(a, n) { return ((a % n) + n) % n; }
 function multFor(combo) { return 1 + Math.min(3, Math.floor(combo / 10)); }
 const $ = id => document.getElementById(id);
+const track = (name, data) => { try { if (window.umami) window.umami.track(name, data); } catch (e) { /* analytics is optional */ } };
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
@@ -714,6 +716,7 @@ async function start(demo) {
     dts: [[], []], fx: [], flash: [0, 0], ended: false
   };
   mode = demo ? 'demo' : 'play';
+  track(demo ? 'Драм: демо' : 'Драм: старт', { level: L.id });
   const hudEl = document.querySelector('.hud');
   if (hudEl.getBoundingClientRect().top < 0 || $('stage').getBoundingClientRect().bottom > innerHeight) hudEl.scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
   $('ov-result').hidden = true;
@@ -834,6 +837,7 @@ function showResult(r) {
   const acc = accuracy(c, L.notes.length) || 0;
   const stars = acc >= 92 ? 3 : acc >= 80 ? 2 : acc >= 60 ? 1 : 0;
   lastResult = { level: L.id, score: r.score, accuracy: Math.round(acc), saved: false };
+  track('Драм: фініш', { level: L.id, accuracy: Math.round(acc), stars });
   $('r-level').textContent = 'Вправа ' + (LEVELS.indexOf(L) + 1) + ' · ' + L.title;
   $('r-title').textContent = stars === 3 ? 'Чисто зіграно!' : stars === 2 ? 'Дуже добре!' : stars === 1 ? 'Непогано!' : 'Спробуй ще раз';
   const starsEl = $('r-stars'); starsEl.textContent = '';
@@ -964,6 +968,7 @@ $('save-form').addEventListener('submit', async e => {
   try {
     await board.add({ name, score: lastResult.score, accuracy: lastResult.accuracy, level: lastResult.level, month: monthKey() });
     lastResult.saved = true;
+    track('Драм: збережено в таблицю', { level: lastResult.level });
     openBoard(lastResult.level);
   } catch (ex) {
     console.error(ex);
@@ -979,7 +984,7 @@ function setLatency(ms) {
   $('c-range').value = latencyMs; $('c-val').textContent = latencyMs + ' мс';
   store.set('rk_latency_ms', latencyMs);
 }
-function openCalib() { if (mode !== 'idle') return; setLatency(latencyMs); $('c-msg').textContent = ''; $('ov-calib').hidden = false; }
+function openCalib() { if (mode !== 'idle') return; track('Драм: калібрування'); setLatency(latencyMs); $('c-msg').textContent = ''; $('ov-calib').hidden = false; }
 function closeCalib() { if (mode === 'calib') mode = 'idle'; calib = null; $('ov-calib').hidden = true; refreshReady(); }
 async function runCalib() {
   ensureCtx(); try { await ctx.resume(); } catch (e) { /* ignore */ }
