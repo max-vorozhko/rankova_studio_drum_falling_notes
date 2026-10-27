@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Jost:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap">
 <style>
 /* Layout: one-screen phone app. Header, level picker with a one-bar score, HUD, the stage (highway onto a pulsing yellow hit line), controls, footer links. */
 :root {
@@ -186,6 +186,41 @@ textarea { width: 100%; box-sizing: border-box; min-height: 140px; font: 12px/1.
   .score { grid-template-columns: 44px repeat(8, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .pad { transition: none; } }
+/* === Rankova brand layer (design system: yellow-web, ink, Comfortaa + Nunito, pill buttons, outlines not shadows) === */
+:root{
+  --paper:#FCFCFC; --card:#FFFFFF; --ink:#231F20; --muted:#434343; --line:#E4E2E2;
+  --sun:#FFDF18; --sun-deep:#8a6d00; --sun-soft:#FFF3BF; --on-sun:#231F20;
+  --brand-edge:#838181; --brand-focus:#90A1B9;
+  --font-display:'Comfortaa','Jost',system-ui,sans-serif;
+  --font-body:'Nunito','Golos Text',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --r:20px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#231F20;--card:#2e2a2b;--ink:#FCFCFC;--muted:#c9c6c6;--line:#434343;--sun-soft:#4a4215;--sun-deep:#FFDF18;--brand-edge:#838181;}}
+:root[data-theme="dark"]{--paper:#231F20;--card:#2e2a2b;--ink:#FCFCFC;--muted:#c9c6c6;--line:#434343;--sun-soft:#4a4215;--sun-deep:#FFDF18;--brand-edge:#838181;}
+body{font-family:var(--font-body);}
+h1,h2,h3,.eyebrow,.big,.btn.primary,.lvl b{font-family:var(--font-display);}
+h1,h2,h3{font-weight:700;letter-spacing:0;}
+.top h1{font-size:20px;}
+.eyebrow{letter-spacing:.08em;}
+/* buttons = pills with a thin edge, no shadows */
+.btn{border:1px solid var(--brand-edge);border-radius:999px;font-family:var(--font-display);font-weight:700;letter-spacing:0;background:var(--card);}
+.btn.primary{background:var(--sun);border-color:var(--ink);color:var(--on-sun);font-size:16px;}
+.btn:not(:disabled):hover{filter:none;background:var(--sun-soft);}
+.btn.primary:not(:disabled):hover{background:#FFE95A;}
+.lvl{border:1px solid var(--brand-edge);border-radius:20px;}
+.lvl[aria-pressed="true"]{background:var(--sun);border-color:var(--ink);}
+.seg{border:1px solid var(--brand-edge);border-radius:999px;}
+/* cards */
+.bar,.stat,.card,.task,.result,.panel,.panel.learn,.summary{border-color:var(--brand-edge);border-radius:24px;}
+.stat,.chip,.tips,.first,.namebox{border-radius:16px;}
+.opt{border-color:var(--brand-edge);border-radius:20px;}
+.opt:hover{border-color:var(--ink);}
+input[type="text"]{border-radius:999px;border:1px solid var(--brand-edge);}
+*{box-shadow:none !important;}
+:focus-visible{outline:3px solid var(--brand-focus) !important;outline-offset:2px;}
+.stage{border-radius:24px;}
+.brandbar{height:4px;background:var(--sun);border-radius:0 0 4px 4px;margin:0 auto;max-width:480px;}
+
 </style>
 
 </head>
